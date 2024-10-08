@@ -1,12 +1,13 @@
 "use client";
 
-// app/page.tsx
+import PoseDetectionPage from "./_components/OpenPoseStreamer";
+
 export default function HomePage() {
   return (
-    <section>
-      <h1>Welcome to My App!</h1>
-      <p>This is the main homepage of the app. Feel free to explore!</p>
-      <button onClick={() => alert("You clicked the button!")}>Click Me</button>
-    </section>
+    <div>
+      <h1>Welcome to the Pose Detection App</h1>
+      {/* Render the Pose Detection component */}
+      <PoseDetectionPage />
+    </div>
   );
 }
