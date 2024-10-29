@@ -247,33 +247,6 @@ export default function PoseDetectionPage() {
 
     if (!poseLandmarker || !video || !canvas) return;
 
-    // // Call pose detection
-    // const results = poseLandmarker.detectForVideo(
-    //   videoRef.current, // Video element
-    //   Date.now() // Timestamp required for video mode
-    // );
-
-    // // Clear the canvas
-    // const canvasCtx = canvasRef.current.getContext("2d");
-    // canvasCtx?.clearRect(
-    //     0,
-    //     0,
-    //     canvasRef.current.width,
-    //     canvasRef.current.height
-    // );
-
-    // // Draw the pose landmarks on the canvas (if detected)
-    // if (results.landmarks.length > 0) {
-    //     console.log("yep we got something");
-    //     //   results.landmarks.forEach((landmark) => {
-    //     //     canvasCtx?.beginPath();
-    //     //     canvasCtx?.arc(landmark[0], landmark[1], 5, 0, 2 * Math.PI);
-    //     //     canvasCtx.fillStyle = "red";
-    //     //     canvasCtx?.fill();
-    //     //   });
-    //   }
-    const context = canvas.getContext('2d');
-
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
