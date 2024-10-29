@@ -196,11 +196,19 @@ export default function PoseDetectionPage() {
   // Initialize video stream
   useEffect(() => {
     const initializeVideoStream = async () => {
-      if (videoRef.current) {
+      if (videoRef.current && canvasRef.current) {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         videoRef.current.srcObject = stream;
 
-        const recorder = new MediaRecorder(stream, { mimeType: "video/mp4" });
+        // Get the video track and its settings
+        const videoTracks = stream.getVideoTracks();
+        const { frameRate } = videoTracks[0].getSettings(); // Get the frame rate
+
+        // Create MediaRecorder instance from the canvas stream
+        const canvas = canvasRef.current;
+        const combinedStream = canvas.captureStream(frameRate); // Capture at webcam's frame rate
+
+        const recorder = new MediaRecorder(stream, { mimeType: "video/mp4" }); // CHANGE THIS TO COMBINED STREAM TO SAVE CANVAS TOO
 
         recorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
@@ -251,7 +259,16 @@ export default function PoseDetectionPage() {
     canvas.height = video.videoHeight;
 
     const canvasCtx = canvas.getContext("2d");
+
     if (canvasCtx) {
+      // First, clear the canvas to avoid artifacts from previous frames
+
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the video frame onto the canvas so we can save it all in one place
+      canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvasCtx.save();
+
       const drawingUtils = new DrawingUtils(canvasCtx!);
       let lastVideoTime = -1;
 
@@ -259,11 +276,9 @@ export default function PoseDetectionPage() {
       if (lastVideoTime !== video.currentTime) {
         lastVideoTime = video.currentTime;
         poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
-          canvasCtx.save();
-          canvasCtx.clearRect(0, 0, canvas!.width, canvas!.height);
           for (const landmark of result.landmarks) {
             drawingUtils.drawLandmarks(landmark, {
-              radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 2, 1),
+              radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 1, 1),
             });
             drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
               lineWidth: 1, // Set the thickness of the lines
@@ -271,12 +286,9 @@ export default function PoseDetectionPage() {
             });
           }
           setParsedLandmarks(processLandmarkElements(result));
-          canvasCtx.restore();
         });
       }
-
-      // Draw the video frame onto the canvas so we can save it all in one place
-      canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvasCtx.restore();
 
       // Process the next frame
       requestAnimationFrame(detectPose);
@@ -344,7 +356,7 @@ export default function PoseDetectionPage() {
         </table>
       );
     }
-  
+
     return (
       <div>
         <h2>Landmark Positions:</h2>
@@ -358,14 +370,14 @@ export default function PoseDetectionPage() {
             </tr>
           </thead>
           <tbody>
-          {Object.entries(landmarks).map(([name, element]) => (
-          <tr key={name}>
-            <td>{name}</td>
-            <td>{element?.x.toFixed(2)}</td>
-            <td>{element?.y.toFixed(2)}</td>
-            <td>{element?.z.toFixed(2)}</td>
-          </tr>
-        ))}
+            {Object.entries(landmarks).map(([name, element]) => (
+              <tr key={name}>
+                <td>{name}</td>
+                <td>{element?.x.toFixed(2)}</td>
+                <td>{element?.y.toFixed(2)}</td>
+                <td>{element?.z.toFixed(2)}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -390,6 +402,7 @@ export default function PoseDetectionPage() {
           height: "auto", // Let height adjust based on aspect ratio
         }}
       >
+        {/* // TODO, dont need to render videoRef at all if canvas is including everything */}
         {/* Video Element */}
         <video
           ref={videoRef}
@@ -402,7 +415,6 @@ export default function PoseDetectionPage() {
             height: "auto", // Maintain aspect ratio
           }}
         ></video>
-
         {/* Canvas Element - Overlay */}
         <canvas
           ref={canvasRef}
