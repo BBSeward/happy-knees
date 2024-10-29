@@ -1,12 +1,16 @@
-// /app/history/page.tsx
+// /app/replay/page.tsx
 "use client";
 
 import { useRef, useState } from "react";
+import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
+import { useDetectPose } from "@/app/_utils/detectPose";
 
 export default function HistoryPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  //   const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
+  // const { detectPose, parsedLandmarks } = useDetectPose(videoRef, canvasRef, poseLandmarker);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -24,13 +28,16 @@ export default function HistoryPage() {
     }
   };
 
+  // NOW REPLACE THIS DETECT POSE WITH THE CUSTOM HOOK
   const detectPose = () => {
     if (videoRef.current && canvasRef.current) {
       const canvasCtx = canvasRef.current.getContext("2d");
       const video = videoRef.current;
+      console.log("we in replay detect pose");
 
       const drawFrame = () => {
         if (canvasCtx) {
+          console.log("we have a canvas context");
           // Clear the canvas
           canvasCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 

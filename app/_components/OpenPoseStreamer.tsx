@@ -17,47 +17,47 @@ export default function PoseDetectionPage() {
   const recordedChunksRef = useRef<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
 
-  // WebGL Detection Function
-  const isWebGLSupported = (): boolean => {
-    try {
-      const canvas = document.createElement("canvas");
-      return !!(
-        window.WebGLRenderingContext &&
-        (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
-      );
-    } catch (e) {
-      return false;
-    }
-  };
+  // // WebGL Detection Function
+  // const isWebGLSupported = (): boolean => {
+  //   try {
+  //     const canvas = document.createElement("canvas");
+  //     return !!(
+  //       window.WebGLRenderingContext &&
+  //       (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+  //     );
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // };
 
-  // Load the Pose Landmarker model with CPU or GPU delegate
-  const loadPoseModel = async () => {
-    try {
-      const vision = await FilesetResolver.forVisionTasks(
-        // path/to/wasm/root
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-      );
-      const delegateType = isWebGLSupported() ? "GPU" : "CPU"; // Use GPU if available
+  // // Load the Pose Landmarker model with CPU or GPU delegate
+  // const loadPoseModel = async () => {
+  //   try {
+  //     const vision = await FilesetResolver.forVisionTasks(
+  //       // path/to/wasm/root
+  //       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+  //     );
+  //     const delegateType = isWebGLSupported() ? "GPU" : "CPU"; // Use GPU if available
 
-      let poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: "/models/pose_landmarker_full.task", // Correct path to your model
-          delegate: delegateType,
-        },
-        runningMode: "VIDEO",
-        numPoses: 1,
-      });
-      console.log("pose landmer is good! it is:");
-      console.log(poseLandmarker);
-      setPoseLandmarker(poseLandmarker); // TODO, combine this with line above to one statement?
+  //     let poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+  //       baseOptions: {
+  //         modelAssetPath: "/models/pose_landmarker_full.task", // Correct path to your model
+  //         delegate: delegateType,
+  //       },
+  //       runningMode: "VIDEO",
+  //       numPoses: 1,
+  //     });
+  //     console.log("pose landmer is good! it is:");
+  //     console.log(poseLandmarker);
+  //     setPoseLandmarker(poseLandmarker); // TODO, combine this with line above to one statement?
 
-      console.log("Pose model loaded successfully.");
-    } catch (error) {
-      console.error("Error loading pose model:", error);
-      // Optionally, set some state to inform the user about the error
-      alert("Failed to load pose model. Please check the console for more details.");
-    }
-  };
+  //     console.log("Pose model loaded successfully.");
+  //   } catch (error) {
+  //     console.error("Error loading pose model:", error);
+  //     // Optionally, set some state to inform the user about the error
+  //     alert("Failed to load pose model. Please check the console for more details.");
+  //   }
+  // };
 
   // adjusts canvas size dynamically
   useEffect(() => {
@@ -161,7 +161,7 @@ export default function PoseDetectionPage() {
       console.log("Video stream has been initialized");
     };
 
-    loadPoseModel();
+    // loadPoseModel();
     initializeVideoStream();
 
     return () => {

@@ -1,8 +1,7 @@
 // utils/detectPose.ts
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
 
-import { useState, useRef } from "react";
-import { useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface LandmarkElement {
   name: string;
@@ -122,11 +121,53 @@ function processLandmarkElements(landmarkResults: PoseLandmarkerResult): Unpacke
 
 export const useDetectPose = (
   videoRef: React.RefObject<HTMLVideoElement>,
-  canvasRef: React.RefObject<HTMLCanvasElement>,
-  poseLandmarker: any
+  canvasRef: React.RefObject<HTMLCanvasElement>
 ) => {
   const [parsedLandmarks, setParsedLandmarks] = useState<UnpackedLandmarks | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  let poseLandmarker = null;
+
+  // WebGL Detection Function
+  const isWebGLSupported = (): boolean => {
+    try {
+      const canvas = document.createElement("canvas");
+      return !!(
+        window.WebGLRenderingContext &&
+        (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+      );
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Load the Pose Landmarker model with CPU or GPU delegate
+  const loadPoseModel = async () => {
+    try {
+      const vision = await FilesetResolver.forVisionTasks(
+        // path/to/wasm/root
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+      );
+      const delegateType = isWebGLSupported() ? "GPU" : "CPU"; // Use GPU if available
+
+      poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: "/models/pose_landmarker_full.task", // Correct path to your model
+          delegate: delegateType,
+        },
+        runningMode: "VIDEO",
+        numPoses: 1,
+      });
+      console.log("pose landmer is good! it is:");
+      console.log(poseLandmarker);
+
+      console.log("Pose model loaded successfully.");
+    } catch (error) {
+      console.error("Error loading pose model:", error);
+      // Optionally, set some state to inform the user about the error
+      alert("Failed to load pose model. Please check the console for more details.");
+    }
+  };
 
   const detectPose = async () => {
     const video = videoRef.current;
@@ -176,18 +217,21 @@ export const useDetectPose = (
     animationFrameRef.current = requestAnimationFrame(detectPose);
   };
 
+
   // Start detecting when poseLandmarker becomes available
   useEffect(() => {
-    if (poseLandmarker) {
-      detectPose(); // Start pose detection when the landmarker is ready
-    }
+    loadPoseModel();
+
+    // if (poseLandmarker) {
+    //   detectPose(); // Start pose detection when the landmarker is ready
+    // }
     // Cleanup function to cancel the animation frame
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [poseLandmarker]);
+  }, []);
 
   return { detectPose, parsedLandmarks };
 };
