@@ -2,133 +2,20 @@
 
 import { useState, useEffect, useRef } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
+import { useDetectPose, parsedLandmarks } from "../_utils/detectPose";
 
-interface LandmarkElement {
-  name: string;
-  x: number;
-  y: number;
-  z: number;
-  visibility?: number;
-}
 
-// Here we will store all values related to the current body geometry given the current and historical model outputs
-interface bodyGeometry {
-  landmark_history: UnpackedLandmarks[]; //todo use this for detecting things over time
-  current_landmarks: UnpackedLandmarks;
-  hip_angle: number;
-  knee_angle: number;
-  ankle_angle: number;
-
-  hip_to_crank_distance: number;
-  hip_to_wrist_distance: number;
-}
-
-interface UnpackedLandmarks {
-  nose: LandmarkElement;
-  left_eye_inner: LandmarkElement;
-  left_eye: LandmarkElement;
-  left_eye_outer: LandmarkElement;
-  right_eye_inner: LandmarkElement;
-  right_eye: LandmarkElement;
-  right_eye_outer: LandmarkElement;
-  left_ear: LandmarkElement;
-  right_ear: LandmarkElement;
-  mouth_left: LandmarkElement;
-  mouth_right: LandmarkElement;
-  left_shoulder: LandmarkElement;
-  right_shoulder: LandmarkElement;
-  left_elbow: LandmarkElement;
-  right_elbow: LandmarkElement;
-  left_wrist: LandmarkElement;
-  right_wrist: LandmarkElement;
-  left_pinky: LandmarkElement;
-  right_pinky: LandmarkElement;
-  left_index: LandmarkElement;
-  right_index: LandmarkElement;
-  left_thumb: LandmarkElement;
-  right_thumb: LandmarkElement;
-  left_hip: LandmarkElement;
-  right_hip: LandmarkElement;
-  left_knee: LandmarkElement;
-  right_knee: LandmarkElement;
-  left_ankle: LandmarkElement;
-  right_ankle: LandmarkElement;
-  left_heel: LandmarkElement;
-  right_heel: LandmarkElement;
-  left_foot_index: LandmarkElement;
-  right_foot_index: LandmarkElement;
-}
-
-// This list represents the order in which the Landmarks and WorldLandmarks results are returned from each model output.
-// https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker/index#models
-const landmarkKeys: (keyof UnpackedLandmarks)[] = [
-  "nose",
-  "left_eye_inner",
-  "left_eye",
-  "left_eye_outer",
-  "right_eye_inner",
-  "right_eye",
-  "right_eye_outer",
-  "left_ear",
-  "right_ear",
-  "mouth_left",
-  "mouth_right",
-  "left_shoulder",
-  "right_shoulder",
-  "left_elbow",
-  "right_elbow",
-  "left_wrist",
-  "right_wrist",
-  "left_pinky",
-  "right_pinky",
-  "left_index",
-  "right_index",
-  "left_thumb",
-  "right_thumb",
-  "left_hip",
-  "right_hip",
-  "left_knee",
-  "right_knee",
-  "left_ankle",
-  "right_ankle",
-  "left_heel",
-  "right_heel",
-  "left_foot_index",
-  "right_foot_index",
-];
-
-function processLandmarkElements(landmarkResults: PoseLandmarkerResult): UnpackedLandmarks {
-  const result = {} as UnpackedLandmarks;
-
-  if (Array.isArray(landmarkResults?.worldLandmarks) && landmarkResults.worldLandmarks.length > 0) {
-    // extract all world landmarks from results array in order
-    landmarkKeys.forEach((key, index) => {
-      result[key] = {
-        name: landmarkKeys[index],
-        x: landmarkResults.worldLandmarks[0][index].x,
-        y: landmarkResults.worldLandmarks[0][index].y,
-        z: landmarkResults.worldLandmarks[0][index].z,
-        visibility: landmarkResults.worldLandmarks[0][index].visibility,
-      };
-    });
-  }
-  return result as UnpackedLandmarks;
-}
-
-function calculateKneeAngle(LandmarkResults: UnpackedLandmarks): number {
-  return 0;
-}
 
 export default function PoseDetectionPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [parsedLandmarks, setParsedLandmarks] = useState<UnpackedLandmarks | null>(null);
+  const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
+  const { detectPose, parsedLandmarks } = useDetectPose(videoRef, canvasRef, poseLandmarker);
+
   const [postProcessedData, setPostProcessedData] = useState<any>(null); // Replace 'any' with the actual type
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
-
-  let poseLandmarker: PoseLandmarker | null = null;
 
   // WebGL Detection Function
   const isWebGLSupported = (): boolean => {
@@ -152,7 +39,7 @@ export default function PoseDetectionPage() {
       );
       const delegateType = isWebGLSupported() ? "GPU" : "CPU"; // Use GPU if available
 
-      poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+      let poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath: "/models/pose_landmarker_full.task", // Correct path to your model
           delegate: delegateType,
@@ -160,6 +47,9 @@ export default function PoseDetectionPage() {
         runningMode: "VIDEO",
         numPoses: 1,
       });
+      console.log("pose landmer is good! it is:");
+      console.log(poseLandmarker);
+      setPoseLandmarker(poseLandmarker); // TODO, combine this with line above to one statement?
 
       console.log("Pose model loaded successfully.");
     } catch (error) {
@@ -208,7 +98,7 @@ export default function PoseDetectionPage() {
         const canvas = canvasRef.current;
         const combinedStream = canvas.captureStream(frameRate); // Capture at webcam's frame rate
 
-        const recorder = new MediaRecorder(stream, { mimeType: "video/mp4" }); // CHANGE THIS TO COMBINED STREAM TO SAVE CANVAS TOO
+        const recorder = new MediaRecorder(stream, { mimeType: "video/mp4" }); // CHANGE THIS TO COMBINED STREAM TO SAVE CANVAS
 
         recorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
@@ -248,52 +138,6 @@ export default function PoseDetectionPage() {
     };
   }, []);
 
-  // Function to run inference on each video frame
-  const detectPose = async () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-
-    if (!poseLandmarker || !video || !canvas) return;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const canvasCtx = canvas.getContext("2d");
-
-    if (canvasCtx) {
-      // First, clear the canvas to avoid artifacts from previous frames
-
-      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw the video frame onto the canvas so we can save it all in one place
-      canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvasCtx.save();
-
-      const drawingUtils = new DrawingUtils(canvasCtx!);
-      let lastVideoTime = -1;
-
-      let startTimeMs = performance.now();
-      if (lastVideoTime !== video.currentTime) {
-        lastVideoTime = video.currentTime;
-        poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
-          for (const landmark of result.landmarks) {
-            drawingUtils.drawLandmarks(landmark, {
-              radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 1, 1),
-            });
-            drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
-              lineWidth: 1, // Set the thickness of the lines
-              //   color: "#00FF00", // Optionally, you can also set the color of the lines
-            });
-          }
-          setParsedLandmarks(processLandmarkElements(result));
-        });
-      }
-      canvasCtx.restore();
-
-      // Process the next frame
-      requestAnimationFrame(detectPose);
-    }
-  };
 
   // Initialize video stream and start inference
   useEffect(() => {
@@ -313,6 +157,8 @@ export default function PoseDetectionPage() {
           detectPose(); // Start pose detection once the video is ready
         };
       }
+
+      console.log("Video stream has been initialized");
     };
 
     loadPoseModel();
