@@ -17,9 +17,8 @@ export default function HistoryPage() {
     if (file) {
       setVideoFile(file);
     }
-  };
 
-  const handleVideoPlayback = () => {
+    // play video and run pose detection
     if (videoFile && videoRef.current) {
       const url = URL.createObjectURL(videoFile);
       videoRef.current.src = url;
@@ -62,9 +61,6 @@ export default function HistoryPage() {
     <div>
       <h2>Replay!!</h2>
       <input type="file" accept="video/mp4" onChange={handleFileChange} />
-      <button onClick={handleVideoPlayback} disabled={!videoFile}>
-        Load and Replay Video
-      </button>
       <video ref={videoRef} loop style={{ display: "none" }} />
       <canvas ref={canvasRef} width={640} height={480} style={{ border: "1px solid black" }} />
     </div>
