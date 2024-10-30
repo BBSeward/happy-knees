@@ -4,8 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
 import { useDetectPose, parsedLandmarks } from "../_utils/detectPose";
 
-
-
 export default function PoseDetectionPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -16,48 +14,7 @@ export default function PoseDetectionPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
-
-  // // WebGL Detection Function
-  // const isWebGLSupported = (): boolean => {
-  //   try {
-  //     const canvas = document.createElement("canvas");
-  //     return !!(
-  //       window.WebGLRenderingContext &&
-  //       (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
-  //     );
-  //   } catch (e) {
-  //     return false;
-  //   }
-  // };
-
-  // // Load the Pose Landmarker model with CPU or GPU delegate
-  // const loadPoseModel = async () => {
-  //   try {
-  //     const vision = await FilesetResolver.forVisionTasks(
-  //       // path/to/wasm/root
-  //       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  //     );
-  //     const delegateType = isWebGLSupported() ? "GPU" : "CPU"; // Use GPU if available
-
-  //     let poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-  //       baseOptions: {
-  //         modelAssetPath: "/models/pose_landmarker_full.task", // Correct path to your model
-  //         delegate: delegateType,
-  //       },
-  //       runningMode: "VIDEO",
-  //       numPoses: 1,
-  //     });
-  //     console.log("pose landmer is good! it is:");
-  //     console.log(poseLandmarker);
-  //     setPoseLandmarker(poseLandmarker); // TODO, combine this with line above to one statement?
-
-  //     console.log("Pose model loaded successfully.");
-  //   } catch (error) {
-  //     console.error("Error loading pose model:", error);
-  //     // Optionally, set some state to inform the user about the error
-  //     alert("Failed to load pose model. Please check the console for more details.");
-  //   }
-  // };
+  const [cameraInitialized, setCameraInitialized] = useState(false);
 
   // adjusts canvas size dynamically
   useEffect(() => {
@@ -83,89 +40,69 @@ export default function PoseDetectionPage() {
     }
   }, [videoRef, canvasRef]);
 
-  // Initialize video stream
+  // Initialize video stream and media recorder for capturing the stream
   useEffect(() => {
     const initializeVideoStream = async () => {
       if (videoRef.current && canvasRef.current) {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        videoRef.current.srcObject = stream;
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          videoRef.current.srcObject = stream;
 
-        // Get the video track and its settings
-        const videoTracks = stream.getVideoTracks();
-        const { frameRate } = videoTracks[0].getSettings(); // Get the frame rate
+          // Start pose detection once the video is ready
+          videoRef.current.onloadeddata = () => {
+            detectPose();
+          };
 
-        // Create MediaRecorder instance from the canvas stream
-        const canvas = canvasRef.current;
-        const combinedStream = canvas.captureStream(frameRate); // Capture at webcam's frame rate
+          // Get the video track and its settings
+          const videoTracks = stream.getVideoTracks();
+          const { frameRate } = videoTracks[0].getSettings(); // Get the frame rate
 
-        const recorder = new MediaRecorder(stream, { mimeType: "video/mp4" }); // CHANGE THIS TO COMBINED STREAM TO SAVE CANVAS
+          // Create MediaRecorder instance from the canvas stream
+          const canvas = canvasRef.current;
+          const combinedStream = canvas.captureStream(frameRate); // Capture at webcam's frame rate
 
-        recorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            console.log("Data available:", event.data.size); // Log chunk size
-            recordedChunksRef.current.push(event.data); // Use useRef to accumulate chunks
-          }
-        };
+          const recorder = new MediaRecorder(stream, { mimeType: "video/mp4" }); // CHANGE THIS TO COMBINED STREAM TO SAVE CANVAS
 
-        recorder.onstop = () => {
-          if (recordedChunksRef.current.length > 0) {
-            const blob = new Blob(recordedChunksRef.current, { type: "video/mp4" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "recorded-video.mp4"; // Set the filename
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            recordedChunksRef.current = []; // Clear chunks after saving
-          } else {
-            console.error("No recorded data available");
-          }
-        };
+          recorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              console.log("Data available:", event.data.size); // Log chunk size
+              recordedChunksRef.current.push(event.data); // Use useRef to accumulate chunks
+            }
+          };
 
-        mediaRecorderRef.current = recorder;
+          recorder.onstop = () => {
+            if (recordedChunksRef.current.length > 0) {
+              const blob = new Blob(recordedChunksRef.current, { type: "video/mp4" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "recorded-video.mp4"; // Set the filename
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              recordedChunksRef.current = []; // Clear chunks after saving
+            } else {
+              console.error("No recorded data available");
+            }
+          };
+
+          mediaRecorderRef.current = recorder;
+
+          setCameraInitialized(true);
+          console.log("Camera stream has been initialized");
+        } catch (error) {
+          console.error("Error accessing the camera:", error);
+          setCameraInitialized(false);
+          return null;
+        }
+      } else {
+        console.log("videoRef or canvasRef not found for some reason");
       }
     };
 
     initializeVideoStream();
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        const tracks = stream.getTracks();
-        tracks.forEach((track) => track.stop());
-      }
-    };
-  }, []);
-
-
-  // Initialize video stream and start inference
-  useEffect(() => {
-    const initializeVideoStream = async () => {
-      if (videoRef.current) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1920 }, // Request 1920px width (1080p)
-            height: { ideal: 1080 }, // Request 1080px height (1080p)
-            facingMode: "user", // Use the front-facing camera
-          },
-        });
-        videoRef.current.srcObject = stream;
-
-        // Wait for the video to start playing
-        videoRef.current.onloadeddata = () => {
-          detectPose(); // Start pose detection once the video is ready
-        };
-      }
-
-      console.log("Video stream has been initialized");
-    };
-
-    // loadPoseModel();
-    initializeVideoStream();
-
-    return () => {
-      // Clean up video stream on component unmount
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         const tracks = stream.getTracks();
@@ -231,69 +168,71 @@ export default function PoseDetectionPage() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex", // Use flexbox to arrange video and table side by side
-        justifyContent: "space-between",
-        alignItems: "flex-start", // Align items to the top of the container
-        width: "100%",
-        height: "auto",
-      }}
-    >
-      {/* Left Section: Video and Canvas */}
+    <>
+      {!cameraInitialized && <p>No camera found :(. Enable camera access and reload page</p>}
       <div
         style={{
-          position: "relative", // Ensure canvas overlays the video
-          width: "70%", // Adjust this to control the width of the video section
-          height: "auto", // Let height adjust based on aspect ratio
+          display: "flex", // Use flexbox to arrange video and table side by side
+          justifyContent: "space-between",
+          alignItems: "flex-start", // Align items to the top of the container
+          width: "100%",
+          height: "auto",
         }}
       >
-        {/* // TODO, dont need to render videoRef at all if canvas is including everything */}
-        {/* Video Element */}
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
+        {/* Left Section: Video and Canvas */}
+        <div
           style={{
-            display: "block",
-            width: "100%", // Video takes up the full width of its container
-            height: "auto", // Maintain aspect ratio
+            position: "relative", // Ensure canvas overlays the video
+            width: "70%", // Adjust this to control the width of the video section
+            height: "auto", // Let height adjust based on aspect ratio
           }}
-        ></video>
-        {/* Canvas Element - Overlay */}
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%", // Canvas overlays on video
-            height: "100%", // Canvas matches video height
-            pointerEvents: "none", // Ensure canvas doesn't interfere with user interactions
-          }}
-        ></canvas>
-      </div>
-
-      {/* Right Section: Table */}
-      <div
-        style={{
-          width: "30%", // Adjust this to control the width of the table section
-          marginLeft: "20px", // Adds some space between video and table
-        }}
-      >
-        <div>
-          <button onClick={startRecording} disabled={isRecording}>
-            Start Recording
-          </button>
-          <button onClick={stopRecording} disabled={!isRecording}>
-            Stop Recording
-          </button>
+        >
+          {/* Video Element */}
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            style={{
+              display: "block",
+              width: "100%",
+              height: "auto",
+            }}
+          ></video>
+          {/* Canvas Element - Overlay */}
+          <canvas
+            ref={canvasRef}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+            }}
+          ></canvas>
         </div>
-        {/* Table Component or Div */}
-        <LandmarkTable landmarks={parsedLandmarks} />
+
+        {/* Right Section: Table */}
+        <div
+          style={{
+            width: "30%", // Adjust this to control the width of the table section
+            marginLeft: "20px", // Adds some space between video and table
+          }}
+        >
+          <div>
+            <button onClick={startRecording} disabled={isRecording}>
+              Start Recording
+            </button>
+            <button onClick={stopRecording} disabled={!isRecording}>
+              Stop Recording
+            </button>
+          </div>
+          {/* Table Component or Div */}
+          <LandmarkTable landmarks={parsedLandmarks} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 // control overall size and layout
