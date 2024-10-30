@@ -8,7 +8,7 @@ export default function PoseDetectionPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
-  const { detectPose, parsedLandmarks } = useDetectPose(videoRef, canvasRef);
+  const { detectPose, parsedLandmarks } = useDetectPose(videoRef, canvasRef, poseLandmarker);
 
   const [postProcessedData, setPostProcessedData] = useState<any>(null); // Replace 'any' with the actual type
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);

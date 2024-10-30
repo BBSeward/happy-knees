@@ -14,7 +14,7 @@ const Header = () => {
             <ButtonLink href="/">Home</ButtonLink>
           </li>
           <li style={navItemStyle}>
-            <ButtonLink href="/record">Record</ButtonLink>
+            <ButtonLink href="/record">-------</ButtonLink>
           </li>
           <li style={navItemStyle}>
             <ButtonLink href="/replay">Replay</ButtonLink>

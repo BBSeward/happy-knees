@@ -121,7 +121,9 @@ function processLandmarkElements(landmarkResults: PoseLandmarkerResult): Unpacke
 
 export const useDetectPose = (
   videoRef: React.RefObject<HTMLVideoElement>,
-  canvasRef: React.RefObject<HTMLCanvasElement>
+  canvasRef: React.RefObject<HTMLCanvasElement>,
+  isPlaying: boolean
+
 ) => {
   const [parsedLandmarks, setParsedLandmarks] = useState<UnpackedLandmarks | null>(null);
   const animationFrameRef = useRef<number | null>(null);
