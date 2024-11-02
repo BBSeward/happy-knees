@@ -1,7 +1,7 @@
 // utils/detectPose.ts
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, RefObject } from "react";
 
 interface LandmarkElement {
   name: string;
@@ -122,13 +122,13 @@ function processLandmarkElements(landmarkResults: PoseLandmarkerResult): Unpacke
 export const useDetectPose = (
   videoRef: React.RefObject<HTMLVideoElement>,
   canvasRef: React.RefObject<HTMLCanvasElement>,
-  isPlaying: boolean
-
+  isPlayingRef: RefObject<boolean>
 ) => {
-  const [parsedLandmarks, setParsedLandmarks] = useState<UnpackedLandmarks | null>(null);
+  const parsedLandmarksRef = useRef<UnpackedLandmarks | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  let poseLandmarker = null;
+  let poseLandmarker: PoseLandmarker | null = null;
+  console.log("useDetectPose initialized again!");
 
   // WebGL Detection Function
   const isWebGLSupported = (): boolean => {
@@ -145,6 +145,8 @@ export const useDetectPose = (
 
   // Load the Pose Landmarker model with CPU or GPU delegate
   const loadPoseModel = async () => {
+    console.log("wtf.");
+
     try {
       const vision = await FilesetResolver.forVisionTasks(
         // path/to/wasm/root
@@ -160,10 +162,8 @@ export const useDetectPose = (
         runningMode: "VIDEO",
         numPoses: 1,
       });
-      console.log("pose landmer is good! it is:");
-      console.log(poseLandmarker);
-
       console.log("Pose model loaded successfully.");
+      detectPose(); // Start pose detection when the landmarker is ready
     } catch (error) {
       console.error("Error loading pose model:", error);
       // Optionally, set some state to inform the user about the error
@@ -175,14 +175,21 @@ export const useDetectPose = (
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    if (!poseLandmarker || !video || !canvas) {
+    // console.log(`poseLadmarker was ${poseLandmarker}, isPlaying was ${isPlayingRef.current}`);
+    if (!poseLandmarker || !isPlayingRef.current) {
       // If any required component is not ready, continue polling
-      console.log("Shit, pose landmarker is not ready??");
+      console.log(
+        `Something isnt ready for detection! poseLadmarker was ${poseLandmarker}, video ref was ${!video}, canvas ref was ${!canvas}, isPlaying was ${
+          isPlayingRef.current
+        }`
+      );
+
+      //HMM shit, not sure if this
       animationFrameRef.current = requestAnimationFrame(detectPose);
       return;
     }
 
-    console.log("Cool, we are detecting in detect Pose");
+    console.log(`Cool, we are detecting in detect Pose, Video playing flag is ${isPlayingRef.current}`);
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -209,31 +216,32 @@ export const useDetectPose = (
               lineWidth: 1,
             });
           }
-          setParsedLandmarks(processLandmarkElements(result));
+          parsedLandmarksRef.current = processLandmarkElements(result);
         });
       }
       canvasCtx.restore();
     }
 
     // Continue the loop
-    animationFrameRef.current = requestAnimationFrame(detectPose);
+    try {
+      animationFrameRef.current = requestAnimationFrame(detectPose);
+    } catch (e) {
+      console.log(`Shit, we had an error during request animation: ${e}`);
+    }
   };
-
 
   // Start detecting when poseLandmarker becomes available
   useEffect(() => {
+    console.log("we in hook");
     loadPoseModel();
 
-    // if (poseLandmarker) {
-    //   detectPose(); // Start pose detection when the landmarker is ready
-    // }
     // Cleanup function to cancel the animation frame
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  });
 
-  return { detectPose, parsedLandmarks };
+  return {};
 };
