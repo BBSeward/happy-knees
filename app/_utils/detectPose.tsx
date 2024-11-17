@@ -1,4 +1,4 @@
-// utils/detectPose.ts
+// utils/startPoseDetection.ts
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
 
 import { useState, useRef, useEffect, RefObject } from "react";
@@ -126,6 +126,7 @@ export const useDetectPose = (
 ) => {
   const parsedLandmarksRef = useRef<UnpackedLandmarks | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const stopPoseDetectionRef = useRef<boolean>(false);
 
   let poseLandmarker: PoseLandmarker | null = null;
   console.log("useDetectPose initialized again!");
@@ -150,7 +151,7 @@ export const useDetectPose = (
     try {
       const vision = await FilesetResolver.forVisionTasks(
         // path/to/wasm/root
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        "/models/wasm"
       );
       const delegateType = isWebGLSupported() ? "GPU" : "CPU"; // Use GPU if available
 
@@ -163,20 +164,26 @@ export const useDetectPose = (
         numPoses: 1,
       });
       console.log("Pose model loaded successfully.");
-      detectPose(); // Start pose detection when the landmarker is ready
     } catch (error) {
       console.error("Error loading pose model:", error);
-      // Optionally, set some state to inform the user about the error
       alert("Failed to load pose model. Please check the console for more details.");
     }
   };
 
-  const detectPose = async () => {
+  const stopPoseDetection = () => {
+    // tells the startPoseDetection async func to stop after its current interation
+    stopPoseDetectionRef.current = true;
+    console.log("stopping pose detection in useDetectPose");
+  };
+
+  const startPoseDetection = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
+    stopPoseDetectionRef.current = false;
+
     // console.log(`poseLadmarker was ${poseLandmarker}, isPlaying was ${isPlayingRef.current}`);
-    if (!poseLandmarker || !isPlayingRef.current) {
+    if (!poseLandmarker || !canvas || !video) {
       // If any required component is not ready, continue polling
       console.log(
         `Something isnt ready for detection! poseLadmarker was ${poseLandmarker}, video ref was ${!video}, canvas ref was ${!canvas}, isPlaying was ${
@@ -184,12 +191,10 @@ export const useDetectPose = (
         }`
       );
 
-      //HMM shit, not sure if this
-      animationFrameRef.current = requestAnimationFrame(detectPose);
+      //continue processsing regardless. HMM NEEDT THIS??
+      animationFrameRef.current = requestAnimationFrame(startPoseDetection);
       return;
     }
-
-    console.log(`Cool, we are detecting in detect Pose, Video playing flag is ${isPlayingRef.current}`);
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -197,6 +202,9 @@ export const useDetectPose = (
     const canvasCtx = canvas.getContext("2d");
 
     if (canvasCtx) {
+
+      console.log("Detecting pose in useDetectPose.startPoseDetection");
+
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
       canvasCtx.save();
@@ -220,13 +228,17 @@ export const useDetectPose = (
         });
       }
       canvasCtx.restore();
+    } else {
+      console.log("2d canvas context wasnt ready for some reason")
     }
 
-    // Continue the loop
-    try {
-      animationFrameRef.current = requestAnimationFrame(detectPose);
-    } catch (e) {
-      console.log(`Shit, we had an error during request animation: ${e}`);
+    if (stopPoseDetectionRef.current) {
+      // end detection, let function end, reset stop pose flag
+      stopPoseDetectionRef.current = true;
+      console.log("startDetectionPose() has stopped");
+    } else {
+      // Continue the loop
+      animationFrameRef.current = requestAnimationFrame(startPoseDetection);
     }
   };
 
@@ -243,5 +255,5 @@ export const useDetectPose = (
     };
   });
 
-  return {};
+  return { startPoseDetection, stopPoseDetection };
 };
