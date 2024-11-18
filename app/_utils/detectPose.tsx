@@ -1,18 +1,33 @@
 // utils/startPoseDetection.ts
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
-
+import { drawFitMeasurements } from "./drawingUtils";
 import { useState, useRef, useEffect, RefObject } from "react";
 
 interface LandmarkElement {
+  /**
+   * Landmark represents a point in 3D space with x, y, z coordinates. The
+   * landmark coordinates are in meters. z represents the landmark depth,
+   * and the smaller the value the closer the world landmark is to the camera.
+   */
+  /**
+   * Normalized Landmark represents a point in 3D space with x, y, z coordinates.
+   * x and y are normalized to [0.0, 1.0] by the image width and height
+   * respectively. z represents the landmark depth, and the smaller the value the
+   * closer the landmark is to the camera. The magnitude of z uses roughly the
+   * same scale as x.
+   */
   name: string;
   x: number;
   y: number;
   z: number;
+  xNormalized: number;
+  yNormalized: number;
+  zNormalized: number;
   visibility?: number;
 }
 
 // Here we will store all values related to the current body geometry given the current and historical model outputs
-interface bodyGeometry {
+interface BodyGeometry {
   landmark_history: UnpackedLandmarks[]; //todo use this for detecting things over time
   current_landmarks: UnpackedLandmarks;
   hip_angle: number;
@@ -23,7 +38,7 @@ interface bodyGeometry {
   hip_to_wrist_distance: number;
 }
 
-interface UnpackedLandmarks {
+export interface UnpackedLandmarks {
   nose: LandmarkElement;
   left_eye_inner: LandmarkElement;
   left_eye: LandmarkElement;
@@ -112,10 +127,14 @@ function processLandmarkElements(landmarkResults: PoseLandmarkerResult): Unpacke
         x: landmarkResults.worldLandmarks[0][index].x,
         y: landmarkResults.worldLandmarks[0][index].y,
         z: landmarkResults.worldLandmarks[0][index].z,
+        xNormalized: landmarkResults.landmarks[0][index].x,
+        yNormalized: landmarkResults.landmarks[0][index].y,
+        zNormalized: landmarkResults.landmarks[0][index].z,
         visibility: landmarkResults.worldLandmarks[0][index].visibility,
       };
     });
   }
+
   return result as UnpackedLandmarks;
 }
 
@@ -202,7 +221,6 @@ export const useDetectPose = (
     const canvasCtx = canvas.getContext("2d");
 
     if (canvasCtx) {
-
       console.log("Detecting pose in useDetectPose.startPoseDetection");
 
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
@@ -216,20 +234,25 @@ export const useDetectPose = (
       if (lastVideoTime !== video.currentTime) {
         lastVideoTime = video.currentTime;
         poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
-          for (const landmark of result.landmarks) {
-            drawingUtils.drawLandmarks(landmark, {
-              radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 1, 1),
-            });
-            drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
-              lineWidth: 1,
-            });
-          }
           parsedLandmarksRef.current = processLandmarkElements(result);
+
+          drawFitMeasurements(parsedLandmarksRef.current, canvasCtx, canvas.width, canvas.height);
+
+          // for (const landmark of result.landmarks) {
+
+          //   drawingUtils.drawLandmarks(landmark, {
+          //     radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 1, 1),
+          //   });
+
+          //   // drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
+          //   //   lineWidth: 1,
+          //   // });
+          // }
         });
       }
       canvasCtx.restore();
     } else {
-      console.log("2d canvas context wasnt ready for some reason")
+      console.log("2d canvas context wasnt ready for some reason");
     }
 
     if (stopPoseDetectionRef.current) {

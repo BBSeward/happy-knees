@@ -12,7 +12,7 @@ export default function HistoryPage() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   //   const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
   const isPlayingRef = useRef(false);
-  const {startPoseDetection, stopPoseDetection} = useDetectPose(videoRef, canvasRef, isPlayingRef);
+  const { startPoseDetection, stopPoseDetection } = useDetectPose(videoRef, canvasRef, isPlayingRef);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -22,16 +22,15 @@ export default function HistoryPage() {
       const url = URL.createObjectURL(file);
       console.log(`Loaded file ${file.name} and applying url: ${url}`);
       //Stopping pose detection we update the video ref to the new source
-      stopPoseDetection()
+      stopPoseDetection();
       console.log("Loading video in history page, stopping any existing pose detection");
 
       videoRef.current.src = url;
       // Add an event listener to wait for the video to be ready
       videoRef.current.addEventListener("loadeddata", () => {
         videoRef.current?.play();
-        startPoseDetection()
+        startPoseDetection();
         console.log("History page video loadeddata has executed, started pose detection");
-
       });
     }
   };
@@ -40,8 +39,8 @@ export default function HistoryPage() {
     <div>
       <h2>Replay!!</h2>
       <input type="file" accept="video/mp4" onChange={handleFileChange} />
-      <video ref={videoRef} loop width={640} height={480} style={{ border: "1px solid black" }} />
       <canvas ref={canvasRef} width={640} height={480} style={{ border: "1px solid black" }} />
+      <video ref={videoRef} loop width={640} height={480} style={{ border: "1px solid black" }} />
     </div>
   );
 }

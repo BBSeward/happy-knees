@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
-import { useDetectPose, parsedLandmarks } from "../_utils/detectPose";
+import { useDetectPose, UnpackedLandmarks } from "../_utils/detectPose";
 
 export default function PoseDetectionPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
-  const { detectPose, parsedLandmarks } = useDetectPose(videoRef, canvasRef, poseLandmarker);
+  const { startPoseDetection } = useDetectPose(videoRef, canvasRef, poseLandmarker);
 
   const [postProcessedData, setPostProcessedData] = useState<any>(null); // Replace 'any' with the actual type
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -50,7 +50,7 @@ export default function PoseDetectionPage() {
 
           // Start pose detection once the video is ready
           videoRef.current.onloadeddata = () => {
-            detectPose();
+            startPoseDetection();
           };
 
           // Get the video track and its settings
@@ -127,7 +127,7 @@ export default function PoseDetectionPage() {
     }
   };
 
-  const LandmarkTable: React.FC<{ landmarks: typeof parsedLandmarks }> = ({ landmarks }) => {
+  const LandmarkTable: React.FC<{ landmarks: UnpackedLandmarks }> = ({ landmarks }) => {
     if (!landmarks) {
       return (
         <table>
@@ -229,7 +229,7 @@ export default function PoseDetectionPage() {
             </button>
           </div>
           {/* Table Component or Div */}
-          <LandmarkTable landmarks={parsedLandmarks} />
+          {/* <LandmarkTable landmarks={parsedLandmarks} /> */}
         </div>
       </div>
     </>
