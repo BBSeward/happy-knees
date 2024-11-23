@@ -78,7 +78,7 @@ function drawArcWithAngle(
   canvasCtx.shadowBlur = 5;
   canvasCtx.shadowOffsetX = 3;
   canvasCtx.shadowOffsetY = 3;
-  canvasCtx.fillText(`${angleDegrees.toFixed(1)}°`, textX, textY);
+  canvasCtx.fillText(`${angleDegrees.toFixed(0)}°`, textX, textY);
 
   //   // Set text style
   //   canvasCtx.font = "20px Arial";

@@ -134,7 +134,7 @@ function processLandmarkElements(landmarkResults: PoseLandmarkerResult): Unpacke
       };
     });
   }
-
+  
   return result as UnpackedLandmarks;
 }
 
@@ -204,11 +204,11 @@ export const useDetectPose = (
     // console.log(`poseLadmarker was ${poseLandmarker}, isPlaying was ${isPlayingRef.current}`);
     if (!poseLandmarker || !canvas || !video) {
       // If any required component is not ready, continue polling
-      console.log(
-        `Something isnt ready for detection! poseLadmarker was ${poseLandmarker}, video ref was ${!video}, canvas ref was ${!canvas}, isPlaying was ${
-          isPlayingRef.current
-        }`
-      );
+      // console.log(
+      //   `Something isnt ready for detection! poseLadmarker was ${poseLandmarker}, video ref was ${!video}, canvas ref was ${!canvas}, isPlaying was ${
+      //     isPlayingRef.current
+      //   }`
+      // );
 
       //continue processsing regardless. HMM NEEDT THIS??
       animationFrameRef.current = requestAnimationFrame(startPoseDetection);

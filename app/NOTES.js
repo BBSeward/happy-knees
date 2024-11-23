@@ -1,15 +1,45 @@
 /* 
 
 todo:
-overlay angles onto the canvas
-  knee, hip, shoulder, elbow?
+1. Core and advanced fit functionality:
+  log angles over some time
+  auto detect cycling, ignore other data
+    first, hips must be perpendicular to the camera
+    detect ankle/foot in circular motion
+  while cycling, gather all the data and inteligently ignore outling points
+    so that we end up with high confidence for the angles we care about
+  What exactly are the final metrics that we want/need.
+    Knee min
+    knee max
+    hip min
+    hip max
+    ablow avg
+    phase 2:
+    knee over toes
+    ankle angle (toes down vs flat?)
+
+2. visualise all the data
+  will nee some filtering, so we only plot when there is motion?
+  - knee VS crank rotation in a polar
+  - hip angle vs crank angle in polar plot
+  - min, max knee and hip angles vs time on either an xy, or just a vertical scale
+  - elbow angle vs time on either an xy, or just a vertical scale
+3. Saving data, user accounts
+  first just let people input to a form and save the data locally
+    Name, fit title, bike, seat hieght and other bike measurements?
+  eventually make an account, save to DB
+
+4. Auto suggest bike adjustmenst based upon measurements
+
+
+
 detect if cycling? 
   foot circle motion?
-  specific trigger hand motion?
 display approx camera angle from hip?
   also approx if camera is level or not?
 live plots to right side of video
 
+offline/local model execution
 */
 
 

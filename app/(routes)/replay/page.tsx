@@ -5,6 +5,8 @@ import { useRef, useState, useEffect } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
 import { useDetectPose } from "@/app/_utils/detectPose";
 import { stopCoverage } from "v8";
+import SidebarForm from "@/app/_components/Sidebar";
+import { createTheme, MantineProvider } from "@mantine/core";
 
 export default function HistoryPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -36,11 +38,12 @@ export default function HistoryPage() {
   };
 
   return (
-    <div>
+    <MantineProvider>
       <h2>Replay!!</h2>
       <input type="file" accept="video/mp4" onChange={handleFileChange} />
       <canvas ref={canvasRef} width={640} height={480} style={{ border: "1px solid black" }} />
       <video ref={videoRef} loop width={640} height={480} style={{ border: "1px solid black" }} />
-    </div>
+      <SidebarForm></SidebarForm>
+    </MantineProvider>
   );
 }
