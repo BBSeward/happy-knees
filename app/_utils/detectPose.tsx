@@ -141,7 +141,6 @@ function processLandmarkElements(landmarkResults: PoseLandmarkerResult): Unpacke
 export const useDetectPose = (
   videoRef: React.RefObject<HTMLVideoElement>,
   canvasRef: React.RefObject<HTMLCanvasElement>,
-  isPlayingRef: RefObject<boolean>
 ) => {
   const parsedLandmarksRef = useRef<UnpackedLandmarks | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -278,5 +277,5 @@ export const useDetectPose = (
     };
   });
 
-  return { startPoseDetection, stopPoseDetection };
+  return { startPoseDetection, stopPoseDetection, parsedLandmarksRef };
 };

@@ -7,20 +7,18 @@ import { useDetectPose } from "@/app/_utils/detectPose";
 import { stopCoverage } from "v8";
 import SidebarForm from "@/app/_components/Sidebar";
 import { createTheme, MantineProvider } from "@mantine/core";
+import TestPlot from "@/app/_components/test_plot";
 
 export default function HistoryPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  
   //   const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
-  const isPlayingRef = useRef(false);
-  const { startPoseDetection, stopPoseDetection } = useDetectPose(videoRef, canvasRef, isPlayingRef);
+  const { startPoseDetection, stopPoseDetection, parsedLandmarksRef } = useDetectPose(videoRef, canvasRef);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && videoRef.current) {
-      setVideoFile(file);
-
       const url = URL.createObjectURL(file);
       console.log(`Loaded file ${file.name} and applying url: ${url}`);
       //Stopping pose detection we update the video ref to the new source
@@ -39,11 +37,31 @@ export default function HistoryPage() {
 
   return (
     <MantineProvider>
-      <h2>Replay!!</h2>
-      <input type="file" accept="video/mp4" onChange={handleFileChange} />
+      {/* <h2 style={{ marginBottom: "10px" }}>Replay!!</h2> */}
+      <label
+        style={{
+          display: "inline-block",
+          cursor: "pointer",
+          padding: "5px",
+          backgroundColor: "#007bff",
+          color: "#fff",
+          borderRadius: "4px",
+          marginBottom: "10px", // Add bottom margin
+        }}
+      >
+        Select Video to Replay
+        <input
+          type="file"
+          accept="video/mp4"
+          onChange={handleFileChange}
+          style={{ display: "none" }} // Hide the native file input
+        />
+      </label>{" "}
       <canvas ref={canvasRef} width={640} height={480} style={{ border: "1px solid black" }} />
       <video ref={videoRef} loop width={640} height={480} style={{ border: "1px solid black" }} />
-      <SidebarForm></SidebarForm>
+      <TestPlot parsedLandmarksRef={parsedLandmarksRef} />
+
+      {/* <SidebarForm></SidebarForm> */}
     </MantineProvider>
   );
 }
