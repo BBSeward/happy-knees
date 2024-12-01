@@ -1,7 +1,44 @@
-import { UnpackedLandmarks } from "./detectPose";
+import { FaceDetector } from "@mediapipe/tasks-vision";
+import { UnpackedLandmarks, LandmarkElement } from "./detectPose";
+
+/**
+ * Calculates the angle between two lines intersecting at a point in 3D space.
+ * @param p1 - The first point on the first line.
+ * @param p2 - The intersection point of the two lines.
+ * @param p3 - The first point on the second line.
+ * @returns The angle in radians between the two lines.
+ */
+function calculateAngleBetweenLines(p1: LandmarkElement, p2: LandmarkElement, p3: LandmarkElement): number {
+  // Calculate vectors for the two lines
+  const vector1 = { x: p1.x - p2.x, y: p1.y - p2.y, z: p1.z - p2.z };
+  const vector2 = { x: p3.x - p2.x, y: p3.y - p2.y, z: p3.z - p2.z };
+
+  // Dot product of the two vectors
+  const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y + vector1.z * vector2.z;
+
+  // Magnitudes of the vectors
+  const magnitude1 = Math.sqrt(vector1.x ** 2 + vector1.y ** 2 + vector1.z ** 2);
+  const magnitude2 = Math.sqrt(vector2.x ** 2 + vector2.y ** 2 + vector2.z ** 2);
+
+  // Calculate the angle
+  const angle = Math.acos(dotProduct / (magnitude1 * magnitude2)); //radians
+  const angleDeg = (angle * 180) / Math.PI; //degrees
+
+  return angleDeg;
+}
+
+// // Example usage:
+// const p1: Point3D = { x: 1, y: 0, z: 0 };
+// const p2: Point3D = { x: 0, y: 0, z: 0 };
+// const p3: Point3D = { x: 0, y: 1, z: 0 };
+
+// const angleInRadians = calculateAngleBetweenLines(p1, p2, p3);
+// console.log(`Angle in radians: ${angleInRadians}`);
+// console.log(`Angle in degrees: ${(angleInRadians * 180) / Math.PI}`);
+
 function drawArcWithAngle(
   canvasCtx: CanvasRenderingContext2D,
-  landmarks: { x: number; y: number }[],
+  landmarks: LandmarkElement[],
   canvasWidth: number,
   canvasHeight: number,
   clockwise: boolean = true // Add a flag for clockwise or counterclockwise
@@ -17,9 +54,9 @@ function drawArcWithAngle(
   const p3 = landmarks[2];
 
   // Convert normalized coordinates to canvas pixel coordinates
-  const point1 = { x: p1.x * canvasWidth, y: p1.y * canvasHeight };
-  const point2 = { x: p2.x * canvasWidth, y: p2.y * canvasHeight };
-  const point3 = { x: p3.x * canvasWidth, y: p3.y * canvasHeight };
+  const point1 = { x: p1.xNormalized * canvasWidth, y: p1.yNormalized * canvasHeight };
+  const point2 = { x: p2.xNormalized * canvasWidth, y: p2.yNormalized * canvasHeight };
+  const point3 = { x: p3.xNormalized * canvasWidth, y: p3.yNormalized * canvasHeight };
 
   // Draw the connecting lines
   canvasCtx.beginPath();
@@ -36,13 +73,19 @@ function drawArcWithAngle(
   // Calculate angles
   const angle1 = Math.atan2(point1.y - point2.y, point1.x - point2.x);
   const angle2 = Math.atan2(point3.y - point2.y, point3.x - point2.x);
-  let angleBetween = Math.abs(angle2 - angle1);
 
+  let angleDegrees;
+
+  // 3d calculation
+  angleDegrees = calculateAngleBetweenLines(landmarks[0], landmarks[1], landmarks[2]);
+
+  // or 2d calculation
+  let angleBetween = Math.abs(angle2 - angle1);
   // Adjust angle based on clockwise flag
   if (!clockwise) {
     if (angleBetween > 0) angleBetween = 2 * Math.PI - angleBetween;
   }
-  const angleDegrees = (angleBetween * 180) / Math.PI;
+  angleDegrees = (angleBetween * 180) / Math.PI;
 
   // Create a radial gradient for the arc fill
   const gradient = canvasCtx.createRadialGradient(point2.x, point2.y, 0, point2.x, point2.y, radius);
@@ -110,71 +153,76 @@ function drawArcWithAngle(
   //   canvasCtx.fillText(text, point2.x, point2.y);
 }
 
-// Example usage in your render loop:
-const drawLandmarksWithFancyArc = (
-  canvasCtx: CanvasRenderingContext2D,
-  landmarks: Array<{ x: number; y: number }>, // Normalized landmark data
-  canvasWidth: number,
-  canvasHeight: number,
-  drawingUtils: any
-) => {
-  // Draw the landmarks
-  drawingUtils.drawLandmarks(canvasCtx, landmarks);
-
-  // Draw the fancy arc using the first three landmarks
-  if (landmarks.length >= 3) {
-    drawArcWithAngle(canvasCtx, landmarks.slice(0, 3), canvasWidth, canvasHeight);
-  }
-};
-
 export function drawFitMeasurements(
   landmarks: UnpackedLandmarks,
   canvasRef: CanvasRenderingContext2D,
   canvasHeight: number,
   canvasWidth: number
 ) {
+  if (!landmarks || !landmarks.right_hip || !landmarks.left_hip.z) {
+    return;
+  }
+
+  // check which side is closer and draw that one
+  let facing_right;
+  if (landmarks.right_hip.z < landmarks.left_hip.z) {
+    facing_right = true;
+  } else {
+    facing_right = false;
+  }
+
   // Draw inner Knee arc
-  if (landmarks && landmarks.left_hip && landmarks.left_knee && landmarks.left_ankle) {
+  let wrist_landmark;
+  let elbow_landmark;
+  let shoulder_landmark;
+  let hip_landmark;
+  let knee_landmark;
+  let ankle_landmark;
+
+  if (facing_right) {
+    wrist_landmark = landmarks.right_wrist;
+    elbow_landmark = landmarks.right_elbow;
+    shoulder_landmark = landmarks.right_shoulder;
+    hip_landmark = landmarks.right_hip;
+    knee_landmark = landmarks.right_knee;
+    ankle_landmark = landmarks.right_ankle;
+  } else {
+    wrist_landmark = landmarks.left_wrist;
+    elbow_landmark = landmarks.left_elbow;
+    shoulder_landmark = landmarks.left_shoulder;
+    hip_landmark = landmarks.left_hip;
+    knee_landmark = landmarks.left_knee;
+    ankle_landmark = landmarks.left_ankle;
+  }
+  if (landmarks && hip_landmark && knee_landmark && ankle_landmark) {
     drawArcWithAngle(
       canvasRef,
-      [
-        { x: landmarks.left_hip.xNormalized, y: landmarks.left_hip.yNormalized },
-        { x: landmarks.left_knee.xNormalized, y: landmarks.left_knee.yNormalized },
-        { x: landmarks.left_ankle.xNormalized, y: landmarks.left_ankle.yNormalized },
-      ],
+      [hip_landmark, knee_landmark, ankle_landmark],
       canvasHeight,
       canvasWidth,
-      true
+      !facing_right
     );
   }
 
   // Draw hip arc
-  if (landmarks && landmarks.left_hip && landmarks.left_knee && landmarks.left_ankle) {
+  if (landmarks && shoulder_landmark && hip_landmark && knee_landmark) {
     drawArcWithAngle(
       canvasRef,
-      [
-        { x: landmarks.left_shoulder.xNormalized, y: landmarks.left_shoulder.yNormalized },
-        { x: landmarks.left_hip.xNormalized, y: landmarks.left_hip.yNormalized },
-        { x: landmarks.left_knee.xNormalized, y: landmarks.left_knee.yNormalized },
-      ],
+      [shoulder_landmark, hip_landmark, knee_landmark],
       canvasHeight,
       canvasWidth,
-      false
+      facing_right
     );
   }
 
   // Draw elbow arc
-  if (landmarks && landmarks.left_hip && landmarks.left_knee && landmarks.left_ankle) {
+  if (landmarks && shoulder_landmark && elbow_landmark && wrist_landmark) {
     drawArcWithAngle(
       canvasRef,
-      [
-        { x: landmarks.left_shoulder.xNormalized, y: landmarks.left_shoulder.yNormalized },
-        { x: landmarks.left_elbow.xNormalized, y: landmarks.left_elbow.yNormalized },
-        { x: landmarks.left_wrist.xNormalized, y: landmarks.left_wrist.yNormalized },
-      ],
+      [shoulder_landmark, elbow_landmark, wrist_landmark],
       canvasHeight,
       canvasWidth,
-      false
+      facing_right
     );
   }
 }

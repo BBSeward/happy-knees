@@ -3,7 +3,7 @@ import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } f
 import { drawFitMeasurements } from "./drawingUtils";
 import { useState, useRef, useEffect, RefObject } from "react";
 
-interface LandmarkElement {
+export interface LandmarkElement {
   /**
    * Landmark represents a point in 3D space with x, y, z coordinates. The
    * landmark coordinates are in meters. z represents the landmark depth,
@@ -28,7 +28,6 @@ interface LandmarkElement {
 
 // Here we will store all values related to the current body geometry given the current and historical model outputs
 interface BodyGeometry {
-  landmark_history: UnpackedLandmarks[]; //todo use this for detecting things over time
   current_landmarks: UnpackedLandmarks;
   hip_angle: number;
   knee_angle: number;
@@ -112,8 +111,21 @@ const landmarkKeys: (keyof UnpackedLandmarks)[] = [
   "right_foot_index",
 ];
 
-function calculateKneeAngle(LandmarkResults: UnpackedLandmarks): number {
-  return 0;
+function angleBetweenThreePoints(point1: LandmarkElement, point2: LandmarkElement, point3: LandmarkElement): number {
+  return Math.abs(
+    Math.atan2(point3.y - point2.y, point3.x - point2.x) - Math.atan2(point1.y - point2.y, point1.x - point2.x)
+  );
+  // const angle1 = Math.atan2(point1.y - point2.y, point1.x - point2.x);
+  // const angle2 = Math.atan2(point3.y - point2.y, point3.x - point2.x);
+  // let angleBetween = Math.abs(angle2 - angle1);;
+}
+
+function calculateBodyGeometry(LandmarkResults: UnpackedLandmarks): BodyGeometry {
+  const result = {} as BodyGeometry;
+
+  // first we check which side of the body is closer
+
+  result.knee_angle = angleBetweenThreePoints()
 }
 
 function processLandmarkElements(landmarkResults: PoseLandmarkerResult): UnpackedLandmarks {
@@ -134,13 +146,13 @@ function processLandmarkElements(landmarkResults: PoseLandmarkerResult): Unpacke
       };
     });
   }
-  
+
   return result as UnpackedLandmarks;
 }
 
 export const useDetectPose = (
   videoRef: React.RefObject<HTMLVideoElement>,
-  canvasRef: React.RefObject<HTMLCanvasElement>,
+  canvasRef: React.RefObject<HTMLCanvasElement>
 ) => {
   const parsedLandmarksRef = useRef<UnpackedLandmarks | null>(null);
   const animationFrameRef = useRef<number | null>(null);

@@ -1,5 +1,3 @@
-"use client";
-
 import PoseDetectionPage from "./_components/OpenPoseStreamer";
 import { createTheme, MantineProvider } from "@mantine/core";
 
@@ -37,10 +35,7 @@ const theme = createTheme({
 export default function HomePage() {
   return (
     <MantineProvider theme={theme}>
-      <div>
-        {/* Render the Pose Detection component */}
-        <PoseDetectionPage />
-      </div>
+      <div>Home page</div>
     </MantineProvider>
   );
 }
