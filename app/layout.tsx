@@ -4,8 +4,8 @@ import Navbar from "./_components/Navbar";
 import { createTheme, MantineProvider } from "@mantine/core";
 
 const theme = createTheme({
-  // colorScheme: 'dark', // Dark mode base
-  primaryColor: "blue", // You can change this to your preferred primary color
+  colorScheme: 'dark', // Set the color scheme to dark to apply a consistent theme
+  primaryColor: "blue", // Primary color for buttons and highlights
   black: "#000000", // Explicit black for dark mode
   white: "#ffffff", // Explicit white for contrast
   colors: {
@@ -22,27 +22,94 @@ const theme = createTheme({
       "#101113",
     ],
   },
+  components: {
+    // Customize all TextInput components
+    TextInput: {
+      styles: {
+        input: {
+          backgroundColor: '#2C2E33', // Dark gray background
+          color: 'white', // White text color
+          borderRadius: '8px',
+          padding: '12px',
+          fontSize: '16px',
+          border: '1px solid #444', // Light border to separate input from background
+          '&:focus': {
+            borderColor: '#888', // Lighter border color on focus
+          },
+        },
+      },
+    },
+    // Customize all Textarea components
+    Textarea: {
+      styles: {
+        input: {
+          backgroundColor: '#2C2E33', // Dark gray background
+          color: 'white', // White text color
+          borderRadius: '8px',
+          padding: '12px',
+          fontSize: '16px',
+          border: '1px solid #444', // Light border to separate input from background
+          '&:focus': {
+            borderColor: '#888', // Lighter border color on focus
+          },
+        },
+      },
+    },
+    // Customize all NumberInput components
+    NumberInput: {
+      styles: {
+        input: {
+          backgroundColor: '#2C2E33', // Dark gray background
+          color: 'white', // White text color
+          borderRadius: '8px',
+          padding: '12px',
+          fontSize: '16px',
+          border: '1px solid #444', // Light border to separate input from background
+          '&:focus': {
+            borderColor: '#888', // Lighter border color on focus
+          },
+        },
+      },
+    },
+  },
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // <MantineProvider theme={theme}>
-      <html lang="en">
-        <body
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            height: "100vh",
-            backgroundColor: "black",
-            color: "white",
-          }}
-        >
-          <Navbar />
-          <div style={{ display: "flex", flex: 1 }}>
-            <main style={{ flex: 1 }}>{children}</main>
+    <html lang="en">
+      <body
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          backgroundColor: "black",
+          color: "white",
+        }}
+      >
+        <Navbar />
+
+        {/* Wrap the app in MantineProvider to apply the theme */}
+        <MantineProvider theme={theme}>
+          <div
+            style={{
+              display: "flex",
+              flex: 1,
+              paddingTop: `20px`,
+            }}
+          >
+            <main
+              style={{
+                flex: 1,
+                paddingTop: "60px",
+                paddingLeft: "20px",
+                paddingRight: "20px",
+              }}
+            >
+              {children}
+            </main>
           </div>
-        </body>
-      </html>
-    // </MantineProvider>
+        </MantineProvider>
+      </body>
+    </html>
   );
 }

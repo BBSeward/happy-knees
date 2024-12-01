@@ -43,7 +43,12 @@ const StreamingChart: React.FC = () => {
       Plotly.newPlot(chartRef.current, initialData, layout);
 
       // Cleanup on unmount
-      return () => Plotly.purge(chartRef.current!);
+      return () => {
+        // Only purge if chartRef.current is still available
+        if (chartRef.current) {
+          Plotly.purge(chartRef.current);
+        }
+      };
     }
   }, []);
 
@@ -52,7 +57,6 @@ const StreamingChart: React.FC = () => {
       const newPoint = {
         x: xValueRef.current++,
         y: Math.random() * 100, // Generate random y-value
-        
       };
 
       // Stream new data
