@@ -1,0 +1,26 @@
+nav:before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 200px;
+  height: 400px;
+  background: rgb(205 194 194 / 30%); /* Original background color */
+  border-radius: 60%; /* Make it oval */
+      transform: rotate(40deg); /* Rotates the oval by 45 degrees */
+
+  filter: blur(50px); /* Apply a blur with 5px radius */
+  transition: filter 0.3s ease; /* Optional smooth transition */
+    z-index: -1
+}
+
+or 
+
+.oval {
+    width: 200px;
+    height: 100px;
+    background: #3498db; /* Original background color */
+    border-radius: 50%; /* Makes it an oval */
+    transform: rotate(45deg); /* Rotates the oval by 45 degrees */
+    transition: transform 0.3s ease; /* Optional smooth transition */
+  }

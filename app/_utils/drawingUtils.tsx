@@ -178,6 +178,7 @@ export function drawFitMeasurements(
   let hip_landmark;
   let knee_landmark;
   let ankle_landmark;
+  let foot_landmark;
 
   if (facing_right) {
     wrist_landmark = landmarks.right_wrist;
@@ -186,6 +187,7 @@ export function drawFitMeasurements(
     hip_landmark = landmarks.right_hip;
     knee_landmark = landmarks.right_knee;
     ankle_landmark = landmarks.right_ankle;
+    foot_landmark = landmarks.right_foot_index;
   } else {
     wrist_landmark = landmarks.left_wrist;
     elbow_landmark = landmarks.left_elbow;
@@ -193,6 +195,7 @@ export function drawFitMeasurements(
     hip_landmark = landmarks.left_hip;
     knee_landmark = landmarks.left_knee;
     ankle_landmark = landmarks.left_ankle;
+    foot_landmark = landmarks.left_foot_index;
   }
   if (landmarks && hip_landmark && knee_landmark && ankle_landmark) {
     drawArcWithAngle(
@@ -220,6 +223,17 @@ export function drawFitMeasurements(
     drawArcWithAngle(
       canvasRef,
       [shoulder_landmark, elbow_landmark, wrist_landmark],
+      canvasHeight,
+      canvasWidth,
+      facing_right
+    );
+  }
+
+  // Draw ankle arc
+  if (landmarks && knee_landmark && ankle_landmark && foot_landmark) {
+    drawArcWithAngle(
+      canvasRef,
+      [knee_landmark, ankle_landmark, foot_landmark],
       canvasHeight,
       canvasWidth,
       facing_right

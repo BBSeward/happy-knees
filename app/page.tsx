@@ -45,7 +45,6 @@ export default function HomePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  //   const [poseLandmarker, setPoseLandmarker] = useState<any>(null);
   const { startPoseDetection, stopPoseDetection, parsedLandmarksRef } = useDetectPose(videoRef, canvasRef);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,37 +64,6 @@ export default function HomePage() {
         console.log("History page video loadeddata has executed, started pose detection");
       });
     }
-  };
-
-  const chartRef = useRef<any>(null);
-
-  const sampleData = Array.from({ length: 1000 }, (_, i) => ({ x: i, y: Math.sin(i / 10) * 10 }));
-
-  const containerStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "20px",
-    // backgroundColor: "#000",
-    // color: "#fff",
-    minHeight: "100vh",
-  };
-
-  const plotStyle: React.CSSProperties = {
-    width: "100%",
-    // maxWidth: "800px",
-    flexGrow: 1, // Allow the chart to grow dynamically
-    // minHeight: "300px", // Ensure a minimum height
-    // backgroundColor: "#222",
-    border: "1px solid #444",
-    borderRadius: "8px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    // color: "#888",
-    overflow: "hidden", // Prevent content overflow
   };
 
   return (
@@ -119,7 +87,7 @@ export default function HomePage() {
             flexDirection: "column",
             gap: "10px",
             width: "100%",
-            maxWidth: "500px",
+            maxWidth: "800px",
             margin: "20px",
           }}
         >
@@ -138,23 +106,23 @@ export default function HomePage() {
             Select Video to Replay
             <input
               type="file"
-              accept="video/mp4"
+              accept="video/mp4,video/quicktime" // Add "video/quicktime" for MOV files
               onChange={handleFileChange}
               style={{ display: "none", justifyContent: "center" }} // Hide the native file input
             />
           </label>{" "}
-          <canvas ref={canvasRef} width={640} height={480} style={{ border: "1px solid black" }} />
-          <video ref={videoRef} loop width={640} height={480} style={{ border: "1px solid black" }} />
+          <canvas ref={canvasRef} width={640} height={480} />
+          <video ref={videoRef} loop width={640} height={480} />
         </div>
 
-        <div style={containerStyle}>
+        {/* <div style={containerStyle}>
           <div style={plotStyle} id="plot2">
             <StreamingChart />
           </div>
           <div style={plotStyle} id="plot2">
             <TestPlot parsedLandmarksRef={parsedLandmarksRef} />{" "}
           </div>
-        </div>
+        </div> */}
       </div>
     </MantineProvider>
   );

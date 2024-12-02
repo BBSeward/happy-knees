@@ -120,14 +120,6 @@ function angleBetweenThreePoints(point1: LandmarkElement, point2: LandmarkElemen
   // let angleBetween = Math.abs(angle2 - angle1);;
 }
 
-function calculateBodyGeometry(LandmarkResults: UnpackedLandmarks): BodyGeometry {
-  const result = {} as BodyGeometry;
-
-  // first we check which side of the body is closer
-
-  result.knee_angle = angleBetweenThreePoints()
-}
-
 function processLandmarkElements(landmarkResults: PoseLandmarkerResult): UnpackedLandmarks {
   const result = {} as UnpackedLandmarks;
 
@@ -199,8 +191,8 @@ export const useDetectPose = (
       alert("Failed to load pose model. Please check the console for more details.");
     }
   };
-
-  const stopPoseDetection = () => {
+    
+    const stopPoseDetection = () => {
     // tells the startPoseDetection async func to stop after its current interation
     stopPoseDetectionRef.current = true;
     console.log("stopping pose detection in useDetectPose");
@@ -212,33 +204,21 @@ export const useDetectPose = (
 
     stopPoseDetectionRef.current = false;
 
-    // console.log(`poseLadmarker was ${poseLandmarker}, isPlaying was ${isPlayingRef.current}`);
     if (!poseLandmarker || !canvas || !video) {
-      // If any required component is not ready, continue polling
-      // console.log(
-      //   `Something isnt ready for detection! poseLadmarker was ${poseLandmarker}, video ref was ${!video}, canvas ref was ${!canvas}, isPlaying was ${
-      //     isPlayingRef.current
-      //   }`
-      // );
-
-      //continue processsing regardless. HMM NEEDT THIS??
       animationFrameRef.current = requestAnimationFrame(startPoseDetection);
       return;
     }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
 
     const canvasCtx = canvas.getContext("2d");
 
     if (canvasCtx) {
       console.log("Detecting pose in useDetectPose.startPoseDetection");
 
-      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-      canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+        canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvasCtx.save();
 
-      const drawingUtils = new DrawingUtils(canvasCtx!);
+        const drawingUtils = new DrawingUtils(canvasCtx!);
       let lastVideoTime = -1;
 
       let startTimeMs = performance.now();
@@ -261,7 +241,7 @@ export const useDetectPose = (
           // }
         });
       }
-      canvasCtx.restore();
+        canvasCtx.restore();
     } else {
       console.log("2d canvas context wasnt ready for some reason");
     }
