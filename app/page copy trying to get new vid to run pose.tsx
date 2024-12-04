@@ -9,20 +9,19 @@ import VideoUploader from "./_components/VideoUploader";
 import "@mantine/core/styles.css";
 
 const theme = createTheme({
-  // colorScheme: 'dark', // Dark mode base
-  primaryColor: "blue", // You can change this to your preferred primary color
-  black: "#000000", // Explicit black for dark mode
-  white: "#ffffff", // Explicit white for contrast
+  primaryColor: "blue",
+  black: "#000000",
+  white: "#ffffff",
   colors: {
     dark: [
-      "#C1C2C5", // Lighter shade for text
+      "#C1C2C5",
       "#A6A7AB",
       "#909296",
       "#5c5f66",
       "#373A40",
-      "#2C2E33", // Default background
+      "#2C2E33",
       "#25262B",
-      "#1A1B1E", // Darker background
+      "#1A1B1E",
       "#141517",
       "#101113",
     ],
@@ -59,30 +58,28 @@ export default function HomePage() {
             margin: "20px",
           }}
         >
-          <div style={{ 
-            position: 'relative',
-            width: '100%',
-            maxWidth: '640px',
-            backgroundColor: 'rgb(44, 46, 51)',
-            borderRadius: '8px',
-          }}>
-            <VideoUploader 
+          <div
+            style={{
+              position: "relative",
+              width: "640px",
+              height: "480px",
+            }}
+          >
+            <VideoUploader
               videoRef={videoRef}
               canvasRef={canvasRef}
               onFrame={startPoseDetection}
               onStop={stopPoseDetection}
-              showControlsInside={false}
             />
-            
-            <canvas 
+            <canvas
               ref={canvasRef}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 0,
                 left: 0,
-                width: '100%',
-                height: 'calc(100% - 56px)', // Subtract controls height
-                pointerEvents: 'none',
+                width: "100%",
+                height: "100%",
+                pointerEvents: "none",
                 zIndex: 1,
               }}
             />

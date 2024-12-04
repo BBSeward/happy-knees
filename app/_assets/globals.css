@@ -26,21 +26,20 @@ body {
   }
 }
 
-
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+    "Droid Sans", "Helvetica Neue", sans-serif;
   background-color: black;
   color: black;
 }
 
-
-
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
-  background-image: url('/vecteezy_black-grid-line-background_49080261.jpg');
+  background-image: url("/vecteezy_black-grid-line-background_49080261.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

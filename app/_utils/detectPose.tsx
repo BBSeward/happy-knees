@@ -191,8 +191,8 @@ export const useDetectPose = (
       alert("Failed to load pose model. Please check the console for more details.");
     }
   };
-    
-    const stopPoseDetection = () => {
+
+  const stopPoseDetection = () => {
     // tells the startPoseDetection async func to stop after its current interation
     stopPoseDetectionRef.current = true;
     console.log("stopping pose detection in useDetectPose");
@@ -205,7 +205,7 @@ export const useDetectPose = (
     stopPoseDetectionRef.current = false;
 
     if (!poseLandmarker || !canvas || !video) {
-      animationFrameRef.current = requestAnimationFrame(startPoseDetection);
+      // animationFrameRef.current = requestAnimationFrame(startPoseDetection);
       return;
     }
 
@@ -214,11 +214,13 @@ export const useDetectPose = (
     if (canvasCtx) {
       console.log("Detecting pose in useDetectPose.startPoseDetection");
 
-        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-        canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        canvasCtx.save();
+      // Clear the canvas with transparency instead of copying video
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const drawingUtils = new DrawingUtils(canvasCtx!);
+      // Save the current state
+      canvasCtx.save();
+
+      const drawingUtils = new DrawingUtils(canvasCtx!);
       let lastVideoTime = -1;
 
       let startTimeMs = performance.now();
@@ -227,21 +229,23 @@ export const useDetectPose = (
         poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
           parsedLandmarksRef.current = processLandmarkElements(result);
 
+          // Clear canvas before drawing new frame
+          canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Draw measurements on transparent background
           drawFitMeasurements(parsedLandmarksRef.current, canvasCtx, canvas.width, canvas.height);
 
           // for (const landmark of result.landmarks) {
-
           //   drawingUtils.drawLandmarks(landmark, {
           //     radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 1, 1),
           //   });
-
           //   // drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
           //   //   lineWidth: 1,
           //   // });
           // }
         });
       }
-        canvasCtx.restore();
+      canvasCtx.restore();
     } else {
       console.log("2d canvas context wasnt ready for some reason");
     }
@@ -252,7 +256,7 @@ export const useDetectPose = (
       console.log("startDetectionPose() has stopped");
     } else {
       // Continue the loop
-      animationFrameRef.current = requestAnimationFrame(startPoseDetection);
+      // animationFrameRef.current = requestAnimationFrame(startPoseDetection);
     }
   };
 
