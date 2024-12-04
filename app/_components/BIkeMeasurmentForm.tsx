@@ -14,7 +14,7 @@ const inputStyles = {
     top: "-10px",
     left: "10px",
     padding: "0 5px",
-    background: "linear-gradient(180deg, transparent 0%, rgb(44, 46, 51) 90%)",
+    background: "transparent",
     color: "rgba(255, 255, 255, 0.7)",
     fontSize: "0.9rem",
     zIndex: 1,
@@ -24,14 +24,14 @@ const inputStyles = {
     borderRadius: "4px",
     padding: "8px 12px",
     fontSize: "1rem",
-    backgroundColor: "rgb(44, 46, 51)",
+    backgroundColor: "transparent",
     color: "rgba(255, 255, 255, 0.9)",
     "&:focus": {
       borderColor: "rgba(255, 255, 255, 0.5)",
-      backgroundColor: "rgb(44, 46, 51)",
+      backgroundColor: "transparent",
     },
     "&:hover": {
-      backgroundColor: "rgb(44, 46, 51)",
+      backgroundColor: "transparent",
     },
   },
 } as const;
@@ -79,6 +79,26 @@ export default function CustomInputForm() {
     }));
   };
 
+  // Special styles just for title and notes
+  const transparentStyle = {
+    ...inputStyles,
+    input: {
+      border: "1px solid rgba(255, 255, 255, 0.2)",
+      borderRadius: "4px",
+      padding: "8px 12px",
+      fontSize: "1rem",
+      backgroundColor: "transparent",
+      color: "rgba(255, 255, 255, 0.9)",
+      "&:focus": {
+        borderColor: "rgba(255, 255, 255, 0.5)",
+        backgroundColor: "transparent",
+      },
+      "&:hover": {
+        backgroundColor: "transparent",
+      },
+    }
+  };
+
   return (
     <div
       className="form-group"
@@ -97,7 +117,7 @@ export default function CustomInputForm() {
           name="title"
           value={formData.title}
           onChange={handleChange}
-          styles={{ ...inputStyles, root: { ...inputStyles.root, marginTop: "0px" } }}
+          styles={transparentStyle}
         />
 
         <div
@@ -125,20 +145,15 @@ export default function CustomInputForm() {
             rightSection={<div style={{ paddingRight: "10px" }}>cm</div>}
             hideControls
             allowDecimal={false}
-            styles={{
-              ...inputStyles,
-              rightSection: {
-                width: "40px",
-                justifyContent: "flex-end",
-              },
-              input: {
-                ...inputStyles.input,
-                width: "120px",
-                textAlign: "right",
-                paddingRight: "45px",
-              },
-            }}
-          />
+            styles={inputStyles}
+            // style={{
+            //   ...inputStyles.input,
+            //   width: "120px",
+            //   textAlign: "right",
+            //   paddingRight: "45px",
+            // },
+          
+        />
         </div>
 
         <div
@@ -206,7 +221,7 @@ export default function CustomInputForm() {
           autosize
           minRows={6}
           maxRows={10}
-          styles={inputStyles}
+          styles={transparentStyle}
         />
 
         <Group style={{ justifyContent: "center" }} mt="md">

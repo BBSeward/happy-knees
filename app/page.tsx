@@ -2,13 +2,13 @@
 
 import { useRef } from "react";
 import { useDetectPose } from "@/app/_utils/detectPose";
-import SidebarForm from "@/app/_components/Sidebar";
 import { createTheme, MantineProvider } from "@mantine/core";
 import BikeForm from "./_components/BIkeMeasurmentForm";
 import VideoUploader from "./_components/VideoUploader";
 import "@mantine/core/styles.css";
 import StreamingChart from "./_components/XyPlot";
 import TestPlot from "./_components/test_plot";
+import { FitDataElement } from "./_utils/detectPose";
 
 const theme = createTheme({
   // colorScheme: 'dark', // Dark mode base
@@ -34,8 +34,13 @@ const theme = createTheme({
 export default function HomePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fitDataHistoryRef = useRef<FitDataElement[]>([]);
 
-  const { startPoseDetection, stopPoseDetection, parsedLandmarksRef } = useDetectPose(videoRef, canvasRef);
+  const { startPoseDetection, stopPoseDetection, parsedLandmarksRef } = useDetectPose(
+    videoRef,
+    canvasRef,
+    fitDataHistoryRef
+  );
 
   return (
     <MantineProvider>
@@ -91,8 +96,8 @@ export default function HomePage() {
             />
           </div>
         </div>
-        <StreamingChart />
-        <TestPlot parsedLandmarksRef={parsedLandmarksRef} />{" "}
+        <StreamingChart landmarkHistoryRef={fitDataHistoryRef} />
+        {/* <TestPlot parsedLandmarksRef={parsedLandmarksRef} />{" "} */}
       </div>
     </MantineProvider>
   );

@@ -42,10 +42,10 @@ function drawArcWithAngle(
   canvasWidth: number,
   canvasHeight: number,
   clockwise: boolean = true // Add a flag for clockwise or counterclockwise
-) {
+): number {
   if (landmarks.length < 3) {
     console.error("At least three landmarks are required to draw the arc.");
-    return;
+    return 0;
   }
 
   // Extract the points
@@ -66,7 +66,7 @@ function drawArcWithAngle(
   canvasCtx.lineTo(point2.x, point2.y);
   canvasCtx.lineTo(point3.x, point3.y);
   canvasCtx.strokeStyle = "white";
-  canvasCtx.lineWidth = 1;
+  canvasCtx.lineWidth = 2;
   canvasCtx.stroke();
 
   // Calculate the radius of the arc (distance between p1 and p2)
@@ -139,6 +139,8 @@ function drawArcWithAngle(
   // canvasCtx.beginPath();
   // canvasCtx.arc(textX, textY, 20, 0, 2 * Math.PI);
   // canvasCtx.fill();
+
+  return angleDegrees;
 }
 
 export function drawFitMeasurements(
@@ -185,8 +187,15 @@ export function drawFitMeasurements(
     ankle_landmark = landmarks.left_ankle;
     foot_landmark = landmarks.left_foot_index;
   }
+
+  // Draw knee arc
+  let elbow_angle = 0;
+  let knee_angle = 0;
+  let ankle_angle = 0;
+  let hip_angle = 0;
+
   if (landmarks && hip_landmark && knee_landmark && ankle_landmark) {
-    drawArcWithAngle(
+    knee_angle = drawArcWithAngle(
       canvasRef,
       [hip_landmark, knee_landmark, ankle_landmark],
       canvasHeight,
@@ -197,7 +206,7 @@ export function drawFitMeasurements(
 
   // Draw hip arc
   if (landmarks && shoulder_landmark && hip_landmark && knee_landmark) {
-    drawArcWithAngle(
+    hip_angle = drawArcWithAngle(
       canvasRef,
       [shoulder_landmark, hip_landmark, knee_landmark],
       canvasHeight,
@@ -208,7 +217,7 @@ export function drawFitMeasurements(
 
   // Draw elbow arc
   if (landmarks && shoulder_landmark && elbow_landmark && wrist_landmark) {
-    drawArcWithAngle(
+    elbow_angle = drawArcWithAngle(
       canvasRef,
       [shoulder_landmark, elbow_landmark, wrist_landmark],
       canvasHeight,
@@ -219,7 +228,7 @@ export function drawFitMeasurements(
 
   // Draw ankle arc
   if (landmarks && knee_landmark && ankle_landmark && foot_landmark) {
-    drawArcWithAngle(
+    ankle_angle = drawArcWithAngle(
       canvasRef,
       [knee_landmark, ankle_landmark, foot_landmark],
       canvasHeight,
@@ -227,4 +236,6 @@ export function drawFitMeasurements(
       facing_right
     );
   }
+
+  return { elbow_angle, knee_angle, ankle_angle, hip_angle };
 }

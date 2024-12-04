@@ -27,16 +27,6 @@ export interface LandmarkElement {
 }
 
 // Here we will store all values related to the current body geometry given the current and historical model outputs
-interface BodyGeometry {
-  current_landmarks: UnpackedLandmarks;
-  hip_angle: number;
-  knee_angle: number;
-  ankle_angle: number;
-
-  hip_to_crank_distance: number;
-  hip_to_wrist_distance: number;
-}
-
 export interface UnpackedLandmarks {
   nose: LandmarkElement;
   left_eye_inner: LandmarkElement;
@@ -111,6 +101,23 @@ const landmarkKeys: (keyof UnpackedLandmarks)[] = [
   "right_foot_index",
 ];
 
+interface FitMeasurements {
+  current_landmarks: UnpackedLandmarks;
+  hip_angle: number;
+  knee_angle: number;
+  ankle_angle: number;
+  elbow_angle: number;
+
+  hip_to_crank_distance: number;
+  hip_to_wrist_distance: number;
+}
+
+export interface FitDataElement {
+  unpackedLandmarks: UnpackedLandmarks;
+  fitGeometry: FitMeasurements;
+  timestamp: number;
+}
+
 function angleBetweenThreePoints(point1: LandmarkElement, point2: LandmarkElement, point3: LandmarkElement): number {
   return Math.abs(
     Math.atan2(point3.y - point2.y, point3.x - point2.x) - Math.atan2(point1.y - point2.y, point1.x - point2.x)
@@ -121,6 +128,7 @@ function angleBetweenThreePoints(point1: LandmarkElement, point2: LandmarkElemen
 }
 
 function processLandmarkElements(landmarkResults: PoseLandmarkerResult): UnpackedLandmarks {
+  // Convert the landmarkResults array into a UnpackedLandmarks object
   const result = {} as UnpackedLandmarks;
 
   if (Array.isArray(landmarkResults?.worldLandmarks) && landmarkResults.worldLandmarks.length > 0) {
@@ -144,7 +152,8 @@ function processLandmarkElements(landmarkResults: PoseLandmarkerResult): Unpacke
 
 export const useDetectPose = (
   videoRef: React.RefObject<HTMLVideoElement>,
-  canvasRef: React.RefObject<HTMLCanvasElement>
+  canvasRef: React.RefObject<HTMLCanvasElement>,
+  fitDataHistoryRef: React.RefObject<FitDataElement[]>
 ) => {
   const parsedLandmarksRef = useRef<UnpackedLandmarks | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -231,8 +240,34 @@ export const useDetectPose = (
         poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
           parsedLandmarksRef.current = processLandmarkElements(result);
 
-          // Draw measurements
-          drawFitMeasurements(parsedLandmarksRef.current, canvasCtx, canvas.width, canvas.height);
+          // if we have good results
+          if (Object.keys(parsedLandmarksRef.current).length !== 0) {
+            // Draw measurements
+            const measurements = drawFitMeasurements(parsedLandmarksRef.current, canvasCtx, canvas.width, canvas.height);
+            if (measurements) {
+              const { elbow_angle, knee_angle, ankle_angle, hip_angle } = measurements;
+              // Save landmark history
+              if (fitDataHistoryRef.current) {
+                fitDataHistoryRef.current.push({
+                  unpackedLandmarks: parsedLandmarksRef.current,
+                  fitGeometry: {
+                    current_landmarks: parsedLandmarksRef.current,
+                    hip_angle,
+                    knee_angle,
+                    ankle_angle,
+                    elbow_angle,
+                    hip_to_crank_distance: 0,
+                    hip_to_wrist_distance: 0
+                  },
+                  timestamp: video.currentTime,
+                });
+                // Keep array size under 50000 elements
+                if (fitDataHistoryRef.current.length > 50000) {
+                  fitDataHistoryRef.current.splice(0, fitDataHistoryRef.current.length - 50000);
+                }
+              }
+            }
+          }
           canvasCtx.save();
 
           // for (const landmark of result.landmarks) {
