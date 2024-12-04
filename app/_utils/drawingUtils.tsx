@@ -58,6 +58,8 @@ function drawArcWithAngle(
   const point2 = { x: p2.xNormalized * canvasWidth, y: p2.yNormalized * canvasHeight };
   const point3 = { x: p3.xNormalized * canvasWidth, y: p3.yNormalized * canvasHeight };
 
+  console.log("Drawing angle at points:", { point1, point2, point3 });
+
   // Draw the connecting lines
   canvasCtx.beginPath();
   canvasCtx.moveTo(point1.x, point1.y);
@@ -100,57 +102,43 @@ function drawArcWithAngle(
   canvasCtx.closePath();
   canvasCtx.fill();
 
-  // Draw angle text inside the arc
-  // clockwise x
-  let textX = point2.x + (radius / 2) * Math.cos((angle1 + angle2) / 2);
+  // Calculate text position more reliably
+  const midAngle = (angle1 + angle2) / 2;
 
+  // Position text at 75% of the radius from the center point
+  const textDistance = radius * 0.75;
+  let textX = point2.x + textDistance * Math.cos(midAngle);
+  let textY = point2.y + textDistance * Math.sin(midAngle);
+
+  // Adjust text position based on clockwise flag
   if (!clockwise) {
-    textX = point2.x - (radius / 2) * Math.cos((angle1 + angle2) / 2); // 1.1 fudge factor to account for text width
+    textX = point2.x - textDistance * Math.cos(midAngle);
+    textY = point2.y - textDistance * Math.sin(midAngle);
   }
 
-  let textY = point2.y + (radius / 2) * Math.sin((angle1 + angle2) / 2);
-  if (!clockwise) {
-    textY = point2.y - (radius / 2) * Math.sin((angle1 + angle2) / 2);
-  }
+  // Debug the text position and angle
+  console.log("Text position:", { textX, textY, angleDegrees });
 
-  canvasCtx.font = "14px Arial";
-  canvasCtx.fillStyle = "white";
+  // Draw the text with much more visible styling
+  canvasCtx.font = "100px Arial"; // Much larger text
+  canvasCtx.lineWidth = 6; // Thick outline
+  canvasCtx.strokeStyle = "black"; // Black outline
+  canvasCtx.fillStyle = "white"; // White text
   canvasCtx.textAlign = "center";
   canvasCtx.textBaseline = "middle";
-  canvasCtx.shadowColor = "black";
-  canvasCtx.shadowBlur = 5;
-  canvasCtx.shadowOffsetX = 3;
-  canvasCtx.shadowOffsetY = 3;
-  canvasCtx.fillText(`${angleDegrees.toFixed(0)}°`, textX, textY);
 
-  //   // Set text style
-  //   canvasCtx.font = "20px Arial";
-  //   canvasCtx.textAlign = "center";
-  //   canvasCtx.textBaseline = "middle";
+  const text = `${angleDegrees.toFixed(1)}°`;
 
-  //   // Add a shadow to the text
-  //   canvasCtx.shadowColor = "black";
-  //   canvasCtx.shadowBlur = 5;
-  //   canvasCtx.shadowOffsetX = 2;
-  //   canvasCtx.shadowOffsetY = 2;
+  // Draw text outline first
+  canvasCtx.strokeText(text, textX, textY);
+  // Draw text fill
+  canvasCtx.fillText(text, textX, textY);
 
-  //   // Draw a background box behind the text
-  //   const text = `${Math.round(angleDegrees * (180 / Math.PI))}°`;
-  //   const textWidth = canvasCtx.measureText(text).width;
-  //   const textHeight = 20; // Height of the text
-
-  //   // Draw the background rectangle
-  //   canvasCtx.fillStyle = "rgba(255, 255, 255, 0.7)"; // Semi-transparent white
-  //   canvasCtx.fillRect(point2.x - textWidth / 2 - 5, point2.y - textHeight / 2 - 5, textWidth + 10, textHeight + 10);
-
-  //   // Draw text border (stroke)
-  //   canvasCtx.lineWidth = 2;
-  //   canvasCtx.strokeStyle = "black";
-  //   canvasCtx.strokeText(text, point2.x, point2.y);
-
-  //   // Fill the text with color
-  //   canvasCtx.fillStyle = "black";
-  //   canvasCtx.fillText(text, point2.x, point2.y);
+  // Draw debug point
+  canvasCtx.fillStyle = "red";
+  canvasCtx.beginPath();
+  canvasCtx.arc(textX, textY, 5, 0, 2 * Math.PI);
+  canvasCtx.fill();
 }
 
 export function drawFitMeasurements(

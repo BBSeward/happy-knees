@@ -214,26 +214,26 @@ export const useDetectPose = (
     if (canvasCtx) {
       console.log("Detecting pose in useDetectPose.startPoseDetection");
 
-      // Clear the canvas with transparency instead of copying video
+      // Clear canvas, draw frame and save state
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Save the current state
+      canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
       canvasCtx.save();
 
       const drawingUtils = new DrawingUtils(canvasCtx!);
       let lastVideoTime = -1;
 
       let startTimeMs = performance.now();
+
       if (lastVideoTime !== video.currentTime) {
         lastVideoTime = video.currentTime;
+
+        // Then detect pose and draw measurements in the same frame
         poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
           parsedLandmarksRef.current = processLandmarkElements(result);
 
-          // Clear canvas before drawing new frame
-          canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-          // Draw measurements on transparent background
+          // Draw measurements
           drawFitMeasurements(parsedLandmarksRef.current, canvasCtx, canvas.width, canvas.height);
+          canvasCtx.save();
 
           // for (const landmark of result.landmarks) {
           //   drawingUtils.drawLandmarks(landmark, {

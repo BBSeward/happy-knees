@@ -66,6 +66,11 @@ export default function VideoUploader({
     const videoRect = video.getBoundingClientRect();
     canvasRef.current.style.width = `${videoRect.width}px`;
     canvasRef.current.style.height = `${videoRect.height}px`;
+
+    // Auto-play the video
+    video.play().catch(error => {
+      console.error("Auto-play failed:", error);
+    });
   };
 
   const processFrame = () => {
@@ -75,6 +80,7 @@ export default function VideoUploader({
 
   const handlePlaybackFrame = () => {
     if (videoRef.current && !videoRef.current.paused) {
+      setCurrentTime(videoRef.current.currentTime);
       processFrame();
       animationFrameRef.current = requestAnimationFrame(handlePlaybackFrame);
     }
@@ -109,7 +115,9 @@ export default function VideoUploader({
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
+      requestAnimationFrame(() => {
+        setCurrentTime(videoRef.current?.currentTime || 0);
+      });
     }
   };
 
@@ -214,7 +222,7 @@ export default function VideoUploader({
             backgroundColor: 'rgb(44, 46, 51)',
             borderRadius: videoSrc && showControlsInside ? '6px' : '6px 6px 0 0',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            overflow: 'hidden', // Ensure canvas doesn't spill out
+            overflow: 'hidden',
           }}
           onDragEnter={handleDragIn}
           onDragLeave={handleDragOut}
@@ -242,28 +250,42 @@ export default function VideoUploader({
               <p style={{ margin: 0 }}>{isDragging ? 'Drop video here' : 'Click or drag video here'}</p>
             </div>
           ) : (
-            <video
-              ref={videoRef}
-              src={videoSrc}
-              muted
-              onLoadedMetadata={handleLoadedMetadata}
-              onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime || 0)}
-              onPlay={() => {
-                setIsPlaying(true);
-                animationFrameRef.current = requestAnimationFrame(handlePlaybackFrame);
-              }}
-              onPause={() => {
-                setIsPlaying(false);
-                if (animationFrameRef.current) {
-                  cancelAnimationFrame(animationFrameRef.current);
-                }
-              }}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-              }}
-            />
+            <>
+              {/* Hidden video element - still active but not visible */}
+              <video
+                ref={videoRef}
+                src={videoSrc}
+                muted
+                onLoadedMetadata={handleLoadedMetadata}
+                onTimeUpdate={handleTimeUpdate}
+                onPlay={() => {
+                  setIsPlaying(true);
+                  animationFrameRef.current = requestAnimationFrame(handlePlaybackFrame);
+                }}
+                onPause={() => {
+                  setIsPlaying(false);
+                  if (animationFrameRef.current) {
+                    cancelAnimationFrame(animationFrameRef.current);
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  opacity: 0,
+                  pointerEvents: 'none',
+                  width: '100%',
+                  height: '100%',
+                }}
+              />
+              {/* Canvas will be the primary display */}
+              <canvas
+                ref={canvasRef}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                }}
+              />
+            </>
           )}
           {videoSrc && showControlsInside && renderControls()}
         </div>
