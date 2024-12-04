@@ -106,7 +106,7 @@ function drawArcWithAngle(
   const midAngle = (angle1 + angle2) / 2;
 
   // Position text at 75% of the radius from the center point
-  const textDistance = radius * 0.75;
+  const textDistance = radius * 0.5;
   let textX = point2.x + textDistance * Math.cos(midAngle);
   let textY = point2.y + textDistance * Math.sin(midAngle);
 
@@ -134,11 +134,11 @@ function drawArcWithAngle(
   // Draw text fill
   canvasCtx.fillText(text, textX, textY);
 
-  // Draw debug point
-  canvasCtx.fillStyle = "red";
-  canvasCtx.beginPath();
-  canvasCtx.arc(textX, textY, 5, 0, 2 * Math.PI);
-  canvasCtx.fill();
+  // // Draw debug point
+  // canvasCtx.fillStyle = "red";
+  // canvasCtx.beginPath();
+  // canvasCtx.arc(textX, textY, 20, 0, 2 * Math.PI);
+  // canvasCtx.fill();
 }
 
 export function drawFitMeasurements(

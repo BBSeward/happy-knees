@@ -7,6 +7,8 @@ import { createTheme, MantineProvider } from "@mantine/core";
 import BikeForm from "./_components/BIkeMeasurmentForm";
 import VideoUploader from "./_components/VideoUploader";
 import "@mantine/core/styles.css";
+import StreamingChart from "./_components/XyPlot";
+import TestPlot from "./_components/test_plot";
 
 const theme = createTheme({
   // colorScheme: 'dark', // Dark mode base
@@ -48,7 +50,6 @@ export default function HomePage() {
         }}
       >
         <BikeForm></BikeForm>
-
         <div
           style={{
             display: "flex",
@@ -59,35 +60,39 @@ export default function HomePage() {
             margin: "20px",
           }}
         >
-          <div style={{ 
-            position: 'relative',
-            width: '100%',
-            maxWidth: '640px',
-            backgroundColor: 'rgb(44, 46, 51)',
-            borderRadius: '8px',
-          }}>
-            <VideoUploader 
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: "640px",
+              backgroundColor: "rgb(44, 46, 51)",
+              borderRadius: "8px",
+            }}
+          >
+            <VideoUploader
               videoRef={videoRef}
               canvasRef={canvasRef}
               onFrame={startPoseDetection}
               onStop={stopPoseDetection}
               showControlsInside={false}
             />
-            
-            <canvas 
+
+            <canvas
               ref={canvasRef}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 0,
                 left: 0,
-                width: '100%',
-                height: 'calc(100% - 56px)', // Subtract controls height
-                pointerEvents: 'none',
+                width: "100%",
+                height: "calc(100% - 56px)", // Subtract controls height
+                pointerEvents: "none",
                 zIndex: 1,
               }}
             />
           </div>
         </div>
+        <StreamingChart />
+        <TestPlot parsedLandmarksRef={parsedLandmarksRef} />{" "}
       </div>
     </MantineProvider>
   );
