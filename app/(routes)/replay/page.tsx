@@ -5,7 +5,7 @@ import { useRef, useState, useEffect } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
 import { useDetectPose } from "@/app/_utils/detectPose";
 import { stopCoverage } from "v8";
-import SidebarForm from "@/app/_components/Sidebar";
+import FitForm from "@/app/_components/Sidebar";
 import { createTheme, MantineProvider } from "@mantine/core";
 import TestPlot from "@/app/_components/test_plot";
 import StreamingChart from "@/app/_components/XyPlot";

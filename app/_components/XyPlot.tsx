@@ -76,7 +76,10 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef }) =
         yaxis4: { title: "Elbow Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
       };
 
-      Plotly.newPlot(chartRef.current, initialData, layout);
+      const config = {responsive: true}
+
+
+      Plotly.newPlot(chartRef.current, initialData, layout, config);
     }
 
     return () => {
@@ -130,6 +133,7 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef }) =
     <div
       ref={chartRef}
       style={{
+        justifyContent: "center",
         width: "100%",
         height: "800px",
         backgroundColor: "transparent",

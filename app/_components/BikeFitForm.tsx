@@ -36,7 +36,7 @@ const inputStyles = {
   },
 } as const;
 
-export default function CustomInputForm() {
+export default function FitForm() {
   const [formData, setFormData] = useState({
     title: "",
     bike: "",

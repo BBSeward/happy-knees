@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useDetectPose } from "@/app/_utils/detectPose";
 import { createTheme, MantineProvider } from "@mantine/core";
-import BikeForm from "./_components/BIkeMeasurmentForm";
+import BikeForm from "./_components/BikeFitForm";
 import VideoUploader from "./_components/VideoUploader";
 import "@mantine/core/styles.css";
 import StreamingChart from "./_components/XyPlot";
@@ -48,7 +48,6 @@ export default function HomePage() {
         style={{
           display: "flex",
           flexDirection: "row",
-          justifyContent: "center",
           alignItems: "flex-start",
           width: "100%",
           height: "auto",
@@ -59,9 +58,10 @@ export default function HomePage() {
           style={{
             display: "flex",
             flexDirection: "column",
+            alignItems: "center",
             gap: "10px",
             width: "100%",
-            maxWidth: "800px",
+            // maxWidth: "800px",
             margin: "20px",
           }}
         >
@@ -69,9 +69,11 @@ export default function HomePage() {
             style={{
               position: "relative",
               width: "100%",
-              maxWidth: "640px",
+              maxWidth: "1000px",
+              // maxHeight: "1080px",
               backgroundColor: "rgb(44, 46, 51)",
               borderRadius: "8px",
+              justifyContent: "center",
             }}
           >
             <VideoUploader
@@ -94,9 +96,9 @@ export default function HomePage() {
                 zIndex: 1,
               }}
             />
-          </div>
+          </div >
+          <StreamingChart landmarkHistoryRef={fitDataHistoryRef} />
         </div>
-        <StreamingChart landmarkHistoryRef={fitDataHistoryRef} />
         {/* <TestPlot parsedLandmarksRef={parsedLandmarksRef} />{" "} */}
       </div>
     </MantineProvider>

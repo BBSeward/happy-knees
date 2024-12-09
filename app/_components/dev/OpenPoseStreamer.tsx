@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from "@mediapipe/tasks-vision"; // Import necessary classes from MediaPipe
-import { useDetectPose, UnpackedLandmarks } from "../_utils/detectPose";
+import { useDetectPose, UnpackedLandmarks } from "../../_utils/detectPose";
 
 export default function PoseDetectionPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);

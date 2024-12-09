@@ -1,5 +1,61 @@
-/* 
 
+# TODO!!
+MVP!!!!!::::::
+lets people uplod their video, we show all the numbers, and let them export a video with the angles
+
+## Short Term
+- [ ] Find crank rotation center
+    - auto detect based upon foot circular motion
+        - analyze as video plays, or analyze whole video?
+    
+    - or manually set based upon video? Dont think this will work well
+- Improve angle angle calculation
+    - extend leg to foot, find intersection point of the two lines
+    draw angle between those
+- add optiona toggles for additional angle visualisations
+    - body to (shoulder to hand line) 90 degrees ideall?
+    - 
+
+
+
+## Long Term
+
+
+
+archivetodo:
+1. Core and advanced fit functionality:
+  log angles over some time
+  auto detect cycling, ignore other data
+    first, hips must be perpendicular to the camera
+    detect ankle/foot in circular motion
+  while cycling, gather all the data and inteligently ignore outling points
+    so that we end up with high confidence for the angles we care about
+  What exactly are the final metrics that we want/need.
+    Knee min
+    knee max
+    hip min
+    hip max
+    ablow avg
+    phase 2:
+    knee over toes
+    ankle angle (toes down vs flat?)
+
+2. visualise all the data
+  will nee some filtering, so we only plot when there is motion?
+  - knee VS crank rotation in a polar
+  - hip angle vs crank angle in polar plot
+  - min, max knee and hip angles vs time on either an xy, or just a vertical scale
+  - elbow angle vs time on either an xy, or just a vertical scale
+3. Saving data, user accounts
+  first just let people input to a form and save the data locally
+    Name, fit title, bike, seat hieght and other bike measurements?
+  eventually make an account, save to DB
+
+4. Auto suggest bike adjustmenst based upon measurements
+
+
+------------------==================== NOTES ARCHIVE ====================------------------
+/* 
 todo:
 1. Core and advanced fit functionality:
   log angles over some time

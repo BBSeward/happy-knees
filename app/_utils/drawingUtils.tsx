@@ -41,7 +41,7 @@ function drawArcWithAngle(
   landmarks: LandmarkElement[],
   canvasWidth: number,
   canvasHeight: number,
-  clockwise: boolean = true // Add a flag for clockwise or counterclockwise
+  clockwise: boolean // Add a flag for clockwise or counterclockwise
 ): number {
   if (landmarks.length < 3) {
     console.error("At least three landmarks are required to draw the arc.");
@@ -73,8 +73,8 @@ function drawArcWithAngle(
   const radius = Math.hypot(point1.x - point2.x, point1.y - point2.y);
 
   // Calculate angles
-  const angle1 = Math.atan2(point1.y - point2.y, point1.x - point2.x);
-  const angle2 = Math.atan2(point3.y - point2.y, point3.x - point2.x);
+  let angle1 = Math.atan2(point1.y - point2.y, point1.x - point2.x);
+  let angle2 = Math.atan2(point3.y - point2.y, point3.x - point2.x);
 
   let angleDegrees;
 
@@ -83,16 +83,19 @@ function drawArcWithAngle(
 
   // or 2d calculation
   let angleBetween = Math.abs(angle2 - angle1);
-  // Adjust angle based on clockwise flag
-  if (!clockwise) {
-    if (angleBetween > 0) angleBetween = 2 * Math.PI - angleBetween;
+  if (angleBetween > Math.PI) {
+    angleBetween = 2 * Math.PI - angleBetween;
   }
+  // // Adjust angle based on clockwise flag
+  // if (!clockwise) {
+  //   if (angleBetween > 0) angleBetween = 2 * Math.PI - angleBetween;
+  // }
   angleDegrees = (angleBetween * 180) / Math.PI;
 
   // Create a radial gradient for the arc fill
   const gradient = canvasCtx.createRadialGradient(point2.x, point2.y, 0, point2.x, point2.y, radius);
-  gradient.addColorStop(0, "rgba(255, 255, 255, 0.8)"); // Center of the arc
-  gradient.addColorStop(0.5, "rgba(255, 255, 255, 0)"); // Outer edge of the arc
+  gradient.addColorStop(0, "rgba(255, 255, 255, 0.9)"); // Center of the arc
+  gradient.addColorStop(0.6, "rgba(255, 255, 255, 0)"); // Outer edge of the arc
 
   // Apply gradient fill
   canvasCtx.fillStyle = gradient;
@@ -102,36 +105,70 @@ function drawArcWithAngle(
   canvasCtx.closePath();
   canvasCtx.fill();
 
+  // Draw thin black arc
+  const arcRadius = 100; // Adjust this value for desired distance from point2
+  canvasCtx.strokeStyle = "black";
+  canvasCtx.lineWidth = 2; // Thin line
+  canvasCtx.beginPath();
+  canvasCtx.arc(point2.x, point2.y, arcRadius, angle1, angle2, !clockwise);
+  canvasCtx.stroke();
+
   // Calculate text position more reliably
-  const midAngle = (angle1 + angle2) / 2;
+  let midAngle = (angle1 + angle2) / 2;
 
-  // Position text at 75% of the radius from the center point
-  const textDistance = radius * 0.5;
-  let textX = point2.x + textDistance * Math.cos(midAngle);
-  let textY = point2.y + textDistance * Math.sin(midAngle);
-
-  // Adjust text position based on clockwise flag
-  if (!clockwise) {
-    textX = point2.x - textDistance * Math.cos(midAngle);
-    textY = point2.y - textDistance * Math.sin(midAngle);
+  // Ensure angles are in the correct order for clockwise/counterclockwise
+  if (clockwise) {
+    if (angle2 < angle1) {
+      angle2 += 2 * Math.PI;
+      midAngle = (angle1 + angle2) / 2;
+    }
+  } else {
+    if (angle1 < angle2) {
+      angle1 += 2 * Math.PI;
+      midAngle = (angle1 + angle2) / 2;
+    }
   }
 
-  // Debug the text position and angle
-  console.log("Text position:", { textX, textY, angleDegrees });
+  // Position text at 50% of the radius from the center point
+  const textDistance = radius * 0.3;
+  const textX = point2.x + textDistance * Math.cos(midAngle);
+  const textY = point2.y + textDistance * Math.sin(midAngle);
+
+  // Calculate relative font size (adjust these values to tune the scaling)
+  const fontSize = Math.max(20, Math.min(80, canvasWidth * 0.035)); // Clamp between 20 and 40 pixels
 
   // Draw the text with much more visible styling
-  canvasCtx.font = "100px Arial"; // Much larger text
-  canvasCtx.lineWidth = 6; // Thick outline
-  canvasCtx.strokeStyle = "black"; // Black outline
-  canvasCtx.fillStyle = "white"; // White text
+  canvasCtx.font = `${fontSize}px Arial`;
+  canvasCtx.lineWidth = fontSize * 0.06; // Scale outline with font size
+  canvasCtx.strokeStyle = "black";
+  canvasCtx.fillStyle = "black";
   canvasCtx.textAlign = "center";
   canvasCtx.textBaseline = "middle";
 
-  const text = `${angleDegrees.toFixed(1)}°`;
+  const text = `${angleDegrees.toFixed(0)}°`;
+
+  // Draw background rectangle
+  const padding = 10;
+  const textWidth = canvasCtx.measureText(text).width;
+  const rectWidth = textWidth + padding * 2;
+  const rectHeight = 100; // Adjust height as needed
+  const rectX = textX - rectWidth / 2;
+  const rectY = textY - 5 - rectHeight / 2;
+
+  canvasCtx.fillStyle = "rgba(255, 255, 255, 0.6)"; // Semi-transparent white
+  canvasCtx.beginPath();
+  canvasCtx.moveTo(rectX + 10, rectY); // Top-left corner
+  canvasCtx.arcTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + rectHeight, 10); // Top-right corner
+  canvasCtx.arcTo(rectX + rectWidth, rectY + rectHeight, rectX, rectY + rectHeight, 10); // Bottom-right corner
+  canvasCtx.arcTo(rectX, rectY + rectHeight, rectX, rectY, 10); // Bottom-left corner
+  canvasCtx.arcTo(rectX, rectY, rectX + rectWidth, rectY, 10); // Top-left corner
+  canvasCtx.closePath();
+  canvasCtx.fill();
 
   // Draw text outline first
   canvasCtx.strokeText(text, textX, textY);
   // Draw text fill
+  canvasCtx.fillStyle = "black";
   canvasCtx.fillText(text, textX, textY);
 
   // // Draw debug point
@@ -188,12 +225,12 @@ export function drawFitMeasurements(
     foot_landmark = landmarks.left_foot_index;
   }
 
-  // Draw knee arc
   let elbow_angle = 0;
   let knee_angle = 0;
   let ankle_angle = 0;
   let hip_angle = 0;
 
+  // Draw knee arc
   if (landmarks && hip_landmark && knee_landmark && ankle_landmark) {
     knee_angle = drawArcWithAngle(
       canvasRef,
