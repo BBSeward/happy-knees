@@ -6,6 +6,18 @@ interface StreamingChartProps {
   landmarkHistoryRef: React.RefObject<FitDataElement[]>;
 }
 
+const downloadJson = (data: any, filename: string) => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef }) => {
   const chartRef = useRef<HTMLDivElement | null>(null);
   const lastPlottedIndexRef = useRef<number>(0);
@@ -111,6 +123,20 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef }) =
           );
 
           lastPlottedIndexRef.current += newData.length;
+
+          // // Check if we've exceeded 5000 points and download data
+          // if (landmarkHistoryRef.current.length > 500) {
+          //   // Create timestamp for unique filename
+          //   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          //   const filename = `landmark-history-${timestamp}.json`;
+            
+          //   // Save to file
+          //   downloadJson(landmarkHistoryRef.current, filename);
+            
+          //   // Clear the history (optional - remove if you want to keep collecting)
+          //   landmarkHistoryRef.current = landmarkHistoryRef.current.slice(-1000);
+          //   lastPlottedIndexRef.current = 0;
+          // }
 
           // Keep only last 1000 points visible on all subplots
           if (lastPlottedIndexRef.current > 1000) {
