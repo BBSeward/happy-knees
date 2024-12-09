@@ -270,14 +270,14 @@ export const useDetectPose = (
           }
           canvasCtx.save();
 
-          // for (const landmark of result.landmarks) {
-          //   drawingUtils.drawLandmarks(landmark, {
-          //     radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 1, 1),
-          //   });
-          //   // drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
-          //   //   lineWidth: 1,
-          //   // });
-          // }
+          for (const landmark of result.landmarks) {
+            drawingUtils.drawLandmarks(landmark, {
+              radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 1, 1),
+            });
+            drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
+              lineWidth: 1,
+            });
+          }
         });
       }
       canvasCtx.restore();
