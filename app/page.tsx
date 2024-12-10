@@ -35,12 +35,19 @@ export default function HomePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fitDataHistoryRef = useRef<FitDataElement[]>([]);
+  const setChartTimeWindow = useRef<((seconds: number) => void) | null>(null);
 
   const { startPoseDetection, stopPoseDetection, parsedLandmarksRef } = useDetectPose(
     videoRef,
     canvasRef,
     fitDataHistoryRef
   );
+
+  const handleDurationChange = (duration: number) => {
+    if (setChartTimeWindow.current) {
+      setChartTimeWindow.current(duration);
+    }
+  };
 
   return (
     <MantineProvider>
@@ -82,6 +89,7 @@ export default function HomePage() {
               onFrame={startPoseDetection}
               onStop={stopPoseDetection}
               showControlsInside={false}
+              onDurationChange={handleDurationChange}
             />
 
             <canvas
@@ -96,8 +104,11 @@ export default function HomePage() {
                 zIndex: 1,
               }}
             />
-          </div >
-          <StreamingChart landmarkHistoryRef={fitDataHistoryRef} />
+          </div>
+          <StreamingChart
+            landmarkHistoryRef={fitDataHistoryRef}
+            setTimeWindow={(callback) => (setChartTimeWindow.current = callback)}
+          />
         </div>
         {/* <TestPlot parsedLandmarksRef={parsedLandmarksRef} />{" "} */}
       </div>

@@ -4,6 +4,7 @@ import { FitDataElement } from "../_utils/detectPose";
 
 interface StreamingChartProps {
   landmarkHistoryRef: React.RefObject<FitDataElement[]>;
+  setTimeWindow?: (callback: (seconds: number) => void) => void;
 }
 
 const downloadJson = (data: any, filename: string) => {
@@ -18,9 +19,30 @@ const downloadJson = (data: any, filename: string) => {
   URL.revokeObjectURL(url);
 };
 
-const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef }) => {
+const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef, setTimeWindow }) => {
   const chartRef = useRef<HTMLDivElement | null>(null);
   const lastPlottedIndexRef = useRef<number>(0);
+  const timeWindowRef = useRef<number>(20); // Default 10 second window
+
+  // Function to update time window
+  const updateTimeWindow = (seconds: number) => {
+    timeWindowRef.current = seconds;
+    if (chartRef.current) {
+      Plotly.relayout(chartRef.current, {
+        "xaxis.range": [0, seconds],
+        "xaxis2.range": [0, seconds],
+        "xaxis3.range": [0, seconds],
+        "xaxis4.range": [0, seconds],
+      });
+    }
+  };
+
+  // Expose the update function through the prop
+  useEffect(() => {
+    if (setTimeWindow) {
+      setTimeWindow(updateTimeWindow);
+    }
+  }, [setTimeWindow]);
 
   useEffect(() => {
     if (chartRef.current) {
@@ -78,13 +100,41 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef }) =
         plot_bgcolor: "transparent",
         paper_bgcolor: "transparent",
         margin: { t: 30, r: 30, b: 30, l: 50 },
-        xaxis: { title: "", color: "#ffffff", gridcolor: "#444444", showgrid: true },
+        xaxis: { 
+          title: "", 
+          color: "#ffffff", 
+          gridcolor: "#444444", 
+          showgrid: true,
+          tickformat: "%M:%S",
+          range: [0, timeWindowRef.current]
+        },
         yaxis: { title: "Hip Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
-        xaxis2: { title: "", color: "#ffffff", gridcolor: "#444444", showgrid: false },
+        xaxis2: { 
+          title: "", 
+          color: "#ffffff", 
+          gridcolor: "#444444", 
+          showgrid: false,
+          tickformat: "%M:%S",
+          range: [0, timeWindowRef.current]
+        },
         yaxis2: { title: "Knee Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
-        xaxis3: { title: "", color: "#ffffff", gridcolor: "#444444", showgrid: false },
+        xaxis3: { 
+          title: "", 
+          color: "#ffffff", 
+          gridcolor: "#444444", 
+          showgrid: false,
+          tickformat: "%M:%S",
+          range: [0, timeWindowRef.current]
+        },
         yaxis3: { title: "Ankle Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
-        xaxis4: { title: "", color: "#ffffff", gridcolor: "#444444", showgrid: false },
+        xaxis4: { 
+          title: "", 
+          color: "#ffffff", 
+          gridcolor: "#444444", 
+          showgrid: false,
+          tickformat: "%M:%S",
+          range: [0, timeWindowRef.current]
+        },
         yaxis4: { title: "Elbow Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
       };
 
@@ -107,11 +157,11 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef }) =
         const newData = landmarkHistoryRef.current.slice(lastPlottedIndexRef.current);
 
         if (newData.length > 0) {
-          const xData = newData.map((_, index) => lastPlottedIndexRef.current + index);
-          const hipData = newData.map((data) => data.fitGeometry.hip_angle);
-          const kneeData = newData.map((data) => data.fitGeometry.knee_angle);
-          const ankleData = newData.map((data) => data.fitGeometry.ankle_angle);
-          const elbowData = newData.map((data) => data.fitGeometry.elbow_angle);
+          const xData = newData.map(data => data.timestamp);
+          const hipData = newData.map(data => data.fitGeometry.hip_angle);
+          const kneeData = newData.map(data => data.fitGeometry.knee_angle);
+          const ankleData = newData.map(data => data.fitGeometry.ankle_angle);
+          const elbowData = newData.map(data => data.fitGeometry.elbow_angle);
 
           Plotly.extendTraces(
             chartRef.current,

@@ -58,8 +58,6 @@ function drawArcWithAngle(
   const point2 = { x: p2.xNormalized * canvasWidth, y: p2.yNormalized * canvasHeight };
   const point3 = { x: p3.xNormalized * canvasWidth, y: p3.yNormalized * canvasHeight };
 
-  console.log("Drawing angle at points:", { point1, point2, point3 });
-
   // Draw the connecting lines
   canvasCtx.beginPath();
   canvasCtx.moveTo(point1.x, point1.y);

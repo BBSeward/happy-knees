@@ -6,6 +6,7 @@ interface VideoUploaderProps {
   onFrame: () => void;
   onStop: () => void;
   showControlsInside?: boolean;
+  onDurationChange?: (duration: number) => void;
 }
 
 export default function VideoUploader({ 
@@ -13,7 +14,8 @@ export default function VideoUploader({
   canvasRef, 
   onFrame, 
   onStop,
-  showControlsInside = false 
+  showControlsInside = false,
+  onDurationChange
 }: VideoUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [videoSrc, setVideoSrc] = useState<string>("");
@@ -32,6 +34,19 @@ export default function VideoUploader({
       onStop();
     };
   }, [onStop]);
+
+
+  // Add this useEffect for auto-loading
+  useEffect(() => {
+    // Create a File object from your local video
+    fetch('/reddit-video.mp4')  // Place your video in the public folder
+      .then(response => response.blob())
+      .then(blob => {
+        const file = new File([blob], 'sample-video.mp4', { type: 'video/mp4' });
+        handleFile(file);
+      })
+      .catch(error => console.error('Error auto-loading video:', error));
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("video/")) {
@@ -53,6 +68,10 @@ export default function VideoUploader({
     
     const video = videoRef.current;
     setDuration(video.duration);
+    if (onDurationChange) {
+      onDurationChange(video.duration);
+    }
+    console.log("video duration", video.duration);
 
     // Get the actual video dimensions
     const videoWidth = video.videoWidth;
