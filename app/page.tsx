@@ -9,6 +9,7 @@ import "@mantine/core/styles.css";
 import StreamingChart from "./_components/XyPlot";
 import TestPlot from "./_components/test_plot";
 import { FitDataElement } from "./_utils/detectPose";
+import VideoFrameProcessor from "./_components/VideoUploaderSeek";
 
 const theme = createTheme({
   // colorScheme: 'dark', // Dark mode base
@@ -35,12 +36,16 @@ export default function HomePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fitDataHistoryRef = useRef<FitDataElement[]>([]);
+  const setChartTimeWindow = useRef<((seconds: number) => void) | null>(null);
+  const cursorUpdateRef = useRef<((timestamp: number) => void) | null>(null);
 
-  const { startPoseDetection, stopPoseDetection, parsedLandmarksRef } = useDetectPose(
-    videoRef,
-    canvasRef,
-    fitDataHistoryRef
-  );
+  const { runPoseDetection, stopPoseDetection, drawPoseFromHistory } = useDetectPose(videoRef, canvasRef, fitDataHistoryRef);
+
+  const handleDurationChange = (duration: number) => {
+    if (setChartTimeWindow.current) {
+      setChartTimeWindow.current(duration);
+    }
+  };
 
   return (
     <MantineProvider>
@@ -79,11 +84,22 @@ export default function HomePage() {
             <VideoUploader
               videoRef={videoRef}
               canvasRef={canvasRef}
-              onFrame={startPoseDetection}
+              onFrameAnaylze={runPoseDetection}
+              onFrameFromMemory={drawPoseFromHistory}
               onStop={stopPoseDetection}
               showControlsInside={false}
+              onDurationChange={handleDurationChange}
+              onTimeUpdate={(timestamp) => {
+                if (cursorUpdateRef.current) {
+                  cursorUpdateRef.current(timestamp);
+                }
+              }}
             />
-
+            {/* <VideoFrameProcessor
+              onFrameProcessed={() => {
+                console.log("frame processed");
+              }}
+            /> */}
             <canvas
               ref={canvasRef}
               style={{
@@ -96,8 +112,14 @@ export default function HomePage() {
                 zIndex: 1,
               }}
             />
-          </div >
-          <StreamingChart landmarkHistoryRef={fitDataHistoryRef} />
+          </div>
+          <StreamingChart
+            landmarkHistoryRef={fitDataHistoryRef}
+            setTimeWindow={(callback) => (setChartTimeWindow.current = callback)}
+            setTimeUpdateCallback={(callback) => {
+              cursorUpdateRef.current = callback;
+            }}
+          />
         </div>
         {/* <TestPlot parsedLandmarksRef={parsedLandmarksRef} />{" "} */}
       </div>

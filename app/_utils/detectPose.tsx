@@ -207,7 +207,56 @@ export const useDetectPose = (
     console.log("stopping pose detection in useDetectPose");
   };
 
-  const startPoseDetection = async () => {
+  const drawPoseFromHistory = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!poseLandmarker || !canvas || !video) {
+      // animationFrameRef.current = requestAnimationFrame(startPoseDetection);
+      return;
+    }
+
+    const canvasCtx = canvas.getContext("2d");
+
+    if (canvasCtx) {
+      console.log("drawing pose from history");
+      // Clear canvas, draw frame and save state
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+      canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvasCtx.save();
+
+      // const drawingUtils = new DrawingUtils(canvasCtx!);
+      // let lastVideoTime = -1;
+
+      // // Then detect pose and draw measurements in the same frame
+      // const currentLandmark = getLandmarkFromHistory(fitDataHistoryRef.current, video.currentTime);
+      // parsedLandmarksRef.current = currentLandmark; // needed here??
+
+      // if (!currentLandmark) {
+      //   console.log("no landmark found for current time!! WTF");
+      //   return;
+      // }
+
+      // const measurements = drawFitMeasurements(currentLandmark, canvasCtx, canvas.width, canvas.height);
+
+      canvasCtx.save();
+
+      // //optionally draw landmarks using built in drawing utils
+      // for (const landmark of currentLandmark.landmarks) {
+      //   drawingUtils.drawLandmarks(landmark, {
+      //     radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 1, 1),
+      //   });
+      //   drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS, {
+      //     lineWidth: 1,
+      //   });
+      // }
+
+      canvasCtx.restore();
+    } else {
+      console.log("2d canvas context wasnt ready for some reason");
+    }
+  };
+
+  const runPoseDetection = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
@@ -221,8 +270,6 @@ export const useDetectPose = (
     const canvasCtx = canvas.getContext("2d");
 
     if (canvasCtx) {
-      console.log("Detecting pose in useDetectPose.startPoseDetection");
-
       // Clear canvas, draw frame and save state
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -231,19 +278,23 @@ export const useDetectPose = (
       const drawingUtils = new DrawingUtils(canvasCtx!);
       let lastVideoTime = -1;
 
-      let startTimeMs = performance.now();
-
       if (lastVideoTime !== video.currentTime) {
         lastVideoTime = video.currentTime;
+        console.log("lastVideoTime", lastVideoTime);
 
         // Then detect pose and draw measurements in the same frame
-        poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
+        poseLandmarker.detectForVideo(video, video.currentTime * 1000, (result) => {
           parsedLandmarksRef.current = processLandmarkElements(result);
 
           // if we have good results
           if (Object.keys(parsedLandmarksRef.current).length !== 0) {
             // Draw measurements
-            const measurements = drawFitMeasurements(parsedLandmarksRef.current, canvasCtx, canvas.width, canvas.height);
+            const measurements = drawFitMeasurements(
+              parsedLandmarksRef.current,
+              canvasCtx,
+              canvas.width,
+              canvas.height
+            );
             if (measurements) {
               const { elbow_angle, knee_angle, ankle_angle, hip_angle } = measurements;
               // Save landmark history
@@ -257,7 +308,7 @@ export const useDetectPose = (
                     ankle_angle,
                     elbow_angle,
                     hip_to_crank_distance: 0,
-                    hip_to_wrist_distance: 0
+                    hip_to_wrist_distance: 0,
                   },
                   timestamp: video.currentTime,
                 });
@@ -308,5 +359,5 @@ export const useDetectPose = (
     };
   });
 
-  return { startPoseDetection, stopPoseDetection, parsedLandmarksRef };
+  return { runPoseDetection, stopPoseDetection, drawPoseFromHistory };
 };
