@@ -9,6 +9,7 @@ import "@mantine/core/styles.css";
 import StreamingChart from "./_components/XyPlot";
 import TestPlot from "./_components/test_plot";
 import { FitDataElement } from "./_utils/detectPose";
+import VideoFrameProcessor from "./_components/VideoUploaderSeek";
 
 const theme = createTheme({
   // colorScheme: 'dark', // Dark mode base
@@ -37,11 +38,7 @@ export default function HomePage() {
   const fitDataHistoryRef = useRef<FitDataElement[]>([]);
   const setChartTimeWindow = useRef<((seconds: number) => void) | null>(null);
 
-  const { startPoseDetection, stopPoseDetection, parsedLandmarksRef } = useDetectPose(
-    videoRef,
-    canvasRef,
-    fitDataHistoryRef
-  );
+  const { runPoseDetection, stopPoseDetection, drawPoseFromHistory } = useDetectPose(videoRef, canvasRef, fitDataHistoryRef);
 
   const handleDurationChange = (duration: number) => {
     if (setChartTimeWindow.current) {
@@ -86,12 +83,17 @@ export default function HomePage() {
             <VideoUploader
               videoRef={videoRef}
               canvasRef={canvasRef}
-              onFrame={startPoseDetection}
+              onFrameAnaylze={runPoseDetection}
+              onFrameFromMemory={drawPoseFromHistory}
               onStop={stopPoseDetection}
               showControlsInside={false}
               onDurationChange={handleDurationChange}
             />
-
+            {/* <VideoFrameProcessor
+              onFrameProcessed={() => {
+                console.log("frame processed");
+              }}
+            /> */}
             <canvas
               ref={canvasRef}
               style={{
