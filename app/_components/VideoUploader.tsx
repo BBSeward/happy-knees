@@ -17,7 +17,6 @@ export default function VideoUploader({
   onFrameAnaylze,
   onFrameFromMemory,
   onStop,
-  showControlsInside = false,
   onDurationChange,
   onTimeUpdate,
 }: VideoUploaderProps) {
@@ -40,17 +39,17 @@ export default function VideoUploader({
     };
   }, [onStop]);
 
-  // Add this useEffect for auto-loading
-  useEffect(() => {
-    // Create a File object from your local video
-    fetch("/reddit-video.mp4") // Place your video in the public folder
-      .then((response) => response.blob())
-      .then((blob) => {
-        const file = new File([blob], "sample-video.mp4", { type: "video/mp4" });
-        handleFile(file);
-      })
-      .catch((error) => console.error("Error auto-loading video:", error));
-  }, []); // Empty dependency array means this runs once on mount
+  // // Add this useEffect for auto-loading
+  // useEffect(() => {
+  //   // Create a File object from your local video
+  //   fetch("/reddit-video.mp4") // Place your video in the public folder
+  //     .then((response) => response.blob())
+  //     .then((blob) => {
+  //       const file = new File([blob], "sample-video.mp4", { type: "video/mp4" });
+  //       handleFile(file);
+  //     })
+  //     .catch((error) => console.error("Error auto-loading video:", error));
+  // }, []); // Empty dependency array means this runs once on mount
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("video/")) {
@@ -226,7 +225,7 @@ export default function VideoUploader({
         alignItems: "center",
         gap: "10px",
         backgroundColor: "rgba(0, 0, 0, 0.8)",
-        borderRadius: showControlsInside ? "0" : "0 0 8px 8px",
+        borderRadius: "0 0 8px 8px",
       }}
     >
       <button
@@ -290,7 +289,7 @@ export default function VideoUploader({
             width: "100%",
             aspectRatio: "16/9",
             backgroundColor: "rgb(44, 46, 51)",
-            borderRadius: videoSrc && showControlsInside ? "6px" : "6px 6px 0 0",
+            borderRadius: "6px 6px 0 0",
             border: "1px solid rgba(255, 255, 255, 0.1)",
             overflow: "hidden",
           }}
@@ -368,11 +367,10 @@ export default function VideoUploader({
               />
             </>
           )}
-          {videoSrc && showControlsInside && initialProcessingDone && renderControls()}
         </div>
       </div>
-      {initialProcessingDone ? (
-        videoSrc && !showControlsInside && renderControls()
+      {videoSrc && (initialProcessingDone ? (
+        renderControls()
       ) : (
         <div
           style={{
@@ -388,7 +386,26 @@ export default function VideoUploader({
         >
           <p>Processing video, keep browser window open!</p>
         </div>
-      )}
+      ))}
+
+      {/* {initialProcessingDone ? (
+        videoSrc && !showControlsInside && renderControls()
+      ) : (
+        <div
+          style={{
+            paddingRight: "5px",
+            paddingLeft: "5px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            borderRadius: "0 0 8px 8px",
+            justifyContent: "center",
+          }}
+        >
+          <p>Processing video, keep browser window open</p>
+        </div>
+      )} */}
     </>
   );
 }
