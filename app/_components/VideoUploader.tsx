@@ -8,6 +8,7 @@ interface VideoUploaderProps {
   onStop: () => void;
   showControlsInside?: boolean;
   onDurationChange?: (duration: number) => void;
+  onTimeUpdate?: (timestamp: number) => void;
 }
 
 export default function VideoUploader({
@@ -18,6 +19,7 @@ export default function VideoUploader({
   onStop,
   showControlsInside = false,
   onDurationChange,
+  onTimeUpdate,
 }: VideoUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [videoSrc, setVideoSrc] = useState<string>("");
@@ -93,16 +95,27 @@ export default function VideoUploader({
     if (!videoRef.current || !canvasRef.current) return;
     if (initialProcessingDone) {
       console.log("processing frame from memory");
-      onFrameFromMemory();
+      if (onFrameFromMemory) {
+        onFrameFromMemory();
+      }
     } else {
-      onFrameAnaylze();
+      if (onFrameAnaylze) { 
+        onFrameAnaylze();
+      }
     }
+    handleOnTimeUpdate()
+
   };
+
+  const handleOnTimeUpdate = () => {
+    if (onTimeUpdate) {
+      onTimeUpdate(videoRef.current?.currentTime || 0);
+    }
+  };  
 
   const handlePlaybackFrame = () => {
     if (videoRef.current && !videoRef.current.paused) {
       setCurrentTime(videoRef.current.currentTime);
-      console.log("currentTime and duration are", videoRef.current.currentTime, duration);
       processFrame();
       animationFrameRef.current = requestAnimationFrame(handlePlaybackFrame);
     }

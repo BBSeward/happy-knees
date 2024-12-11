@@ -5,12 +5,13 @@ import { FitDataElement } from "../_utils/detectPose";
 interface StreamingChartProps {
   landmarkHistoryRef: React.RefObject<FitDataElement[]>;
   setTimeWindow?: (callback: (seconds: number) => void) => void;
+  setTimeUpdateCallback?: (callback: (timestamp: number) => void) => void;
 }
 
 const downloadJson = (data: any, filename: string) => {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
@@ -19,7 +20,11 @@ const downloadJson = (data: any, filename: string) => {
   URL.revokeObjectURL(url);
 };
 
-const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef, setTimeWindow }) => {
+const StreamingChart: React.FC<StreamingChartProps> = ({
+  landmarkHistoryRef,
+  setTimeWindow,
+  setTimeUpdateCallback,
+}) => {
   const chartRef = useRef<HTMLDivElement | null>(null);
   const lastPlottedIndexRef = useRef<number>(0);
   const timeWindowRef = useRef<number>(20); // Default 10 second window
@@ -100,46 +105,45 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef, set
         plot_bgcolor: "transparent",
         paper_bgcolor: "transparent",
         margin: { t: 30, r: 30, b: 30, l: 50 },
-        xaxis: { 
-          title: "", 
-          color: "#ffffff", 
-          gridcolor: "#444444", 
+        xaxis: {
+          title: "",
+          color: "#ffffff",
+          gridcolor: "#444444",
           showgrid: true,
           tickformat: "%M:%S",
-          range: [0, timeWindowRef.current]
+          range: [0, timeWindowRef.current],
         },
         yaxis: { title: "Hip Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
-        xaxis2: { 
-          title: "", 
-          color: "#ffffff", 
-          gridcolor: "#444444", 
+        xaxis2: {
+          title: "",
+          color: "#ffffff",
+          gridcolor: "#444444",
           showgrid: false,
           tickformat: "%M:%S",
-          range: [0, timeWindowRef.current]
+          range: [0, timeWindowRef.current],
         },
         yaxis2: { title: "Knee Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
-        xaxis3: { 
-          title: "", 
-          color: "#ffffff", 
-          gridcolor: "#444444", 
+        xaxis3: {
+          title: "",
+          color: "#ffffff",
+          gridcolor: "#444444",
           showgrid: false,
           tickformat: "%M:%S",
-          range: [0, timeWindowRef.current]
+          range: [0, timeWindowRef.current],
         },
         yaxis3: { title: "Ankle Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
-        xaxis4: { 
-          title: "", 
-          color: "#ffffff", 
-          gridcolor: "#444444", 
+        xaxis4: {
+          title: "",
+          color: "#ffffff",
+          gridcolor: "#444444",
           showgrid: false,
           tickformat: "%M:%S",
-          range: [0, timeWindowRef.current]
+          range: [0, timeWindowRef.current],
         },
         yaxis4: { title: "Elbow Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
       };
 
-      const config = {responsive: true}
-
+      const config = { responsive: true };
 
       Plotly.newPlot(chartRef.current, initialData, layout, config);
     }
@@ -157,11 +161,11 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef, set
         const newData = landmarkHistoryRef.current.slice(lastPlottedIndexRef.current);
 
         if (newData.length > 0) {
-          const xData = newData.map(data => data.timestamp);
-          const hipData = newData.map(data => data.fitGeometry.hip_angle);
-          const kneeData = newData.map(data => data.fitGeometry.knee_angle);
-          const ankleData = newData.map(data => data.fitGeometry.ankle_angle);
-          const elbowData = newData.map(data => data.fitGeometry.elbow_angle);
+          const xData = newData.map((data) => data.timestamp);
+          const hipData = newData.map((data) => data.fitGeometry.hip_angle);
+          const kneeData = newData.map((data) => data.fitGeometry.knee_angle);
+          const ankleData = newData.map((data) => data.fitGeometry.ankle_angle);
+          const elbowData = newData.map((data) => data.fitGeometry.elbow_angle);
 
           Plotly.extendTraces(
             chartRef.current,
@@ -179,10 +183,10 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef, set
           //   // Create timestamp for unique filename
           //   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
           //   const filename = `landmark-history-${timestamp}.json`;
-            
+
           //   // Save to file
           //   downloadJson(landmarkHistoryRef.current, filename);
-            
+
           //   // Clear the history (optional - remove if you want to keep collecting)
           //   landmarkHistoryRef.current = landmarkHistoryRef.current.slice(-1000);
           //   lastPlottedIndexRef.current = 0;
@@ -204,6 +208,120 @@ const StreamingChart: React.FC<StreamingChartProps> = ({ landmarkHistoryRef, set
 
     return () => clearInterval(updateInterval);
   }, [landmarkHistoryRef]);
+
+  useEffect(() => {
+    if (setTimeUpdateCallback) {
+      setTimeUpdateCallback((timestamp: number) => {
+        if (chartRef.current) {
+          const plotData = chartRef.current.data;
+          
+          const annotations = plotData.map((trace, traceIndex) => {
+            // Safety check for trace data
+            if (!trace.x || !trace.y) {
+              return null;
+            }
+
+            const xData = trace.x as number[];
+            const yData = trace.y as number[];
+
+            // Check if we have any data points
+            if (xData.length === 0 || yData.length === 0) {
+              return null;
+            }
+
+            // Find index of closest timestamp
+            const closestIndex = xData.reduce((prev, curr, idx) => 
+              Math.abs(curr - timestamp) < Math.abs(xData[prev] - timestamp) ? idx : prev, 0);
+
+            // Safety check for the found values
+            if (closestIndex === undefined || !yData[closestIndex]) {
+              return null;
+            }
+
+            return {
+              x: xData[closestIndex],
+              y: yData[closestIndex],
+              xref: `x${traceIndex + 1}`,
+              yref: `y${traceIndex + 1}`,
+              text: yData[closestIndex].toFixed(1) + '°',
+              showarrow: true,
+              arrowhead: 1,
+              ax: 50,
+              ay: 0,
+              yanchor: 'center',
+              font: { color: 'white' },
+              bgcolor: 'rgba(0, 0, 0, 0.5)',
+              bordercolor: 'gray',
+              standoff: 5  // Minimum distance between the arrow and the text
+            };
+          })
+          .filter((annotation): annotation is NonNullable<typeof annotation> => annotation !== null);
+
+          Plotly.relayout(chartRef.current, {
+            shapes: [
+              {
+                type: 'line',
+                x0: timestamp,
+                x1: timestamp,
+                y0: 0,
+                y1: 1,
+                yref: 'paper',
+                xref: 'x',
+                line: {
+                  color: 'gray',
+                  width: 1,
+                  dash: 'dash'
+                }
+              },
+              {
+                type: 'line',
+                x0: timestamp,
+                x1: timestamp,
+                y0: 0,
+                y1: 1,
+                yref: 'paper',
+                xref: 'x2',
+                line: {
+                  color: 'gray',
+                  width: 1,
+                  dash: 'dash'
+                }
+              },
+              {
+                type: 'line',
+                x0: timestamp,
+                x1: timestamp,
+                y0: 0,
+                y1: 1,
+                yref: 'paper',
+                xref: 'x3',
+                line: {
+                  color: 'gray',
+                  width: 1,
+                  dash: 'dash'
+                }
+              },
+              {
+                type: 'line',
+                x0: timestamp,
+                x1: timestamp,
+                y0: 0,
+                y1: 1,
+                yref: 'paper',
+                xref: 'x4',
+                line: {
+                  color: 'gray',
+                  width: 1,
+                  dash: 'dash'
+                }
+              }
+            ],
+            annotations: annotations
+          });
+        }
+      });
+    }
+  }, [setTimeUpdateCallback]);
 
   return (
     <div

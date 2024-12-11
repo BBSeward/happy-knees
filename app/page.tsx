@@ -37,6 +37,7 @@ export default function HomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fitDataHistoryRef = useRef<FitDataElement[]>([]);
   const setChartTimeWindow = useRef<((seconds: number) => void) | null>(null);
+  const cursorUpdateRef = useRef<((timestamp: number) => void) | null>(null);
 
   const { runPoseDetection, stopPoseDetection, drawPoseFromHistory } = useDetectPose(videoRef, canvasRef, fitDataHistoryRef);
 
@@ -88,6 +89,11 @@ export default function HomePage() {
               onStop={stopPoseDetection}
               showControlsInside={false}
               onDurationChange={handleDurationChange}
+              onTimeUpdate={(timestamp) => {
+                if (cursorUpdateRef.current) {
+                  cursorUpdateRef.current(timestamp);
+                }
+              }}
             />
             {/* <VideoFrameProcessor
               onFrameProcessed={() => {
@@ -110,6 +116,9 @@ export default function HomePage() {
           <StreamingChart
             landmarkHistoryRef={fitDataHistoryRef}
             setTimeWindow={(callback) => (setChartTimeWindow.current = callback)}
+            setTimeUpdateCallback={(callback) => {
+              cursorUpdateRef.current = callback;
+            }}
           />
         </div>
         {/* <TestPlot parsedLandmarksRef={parsedLandmarksRef} />{" "} */}
