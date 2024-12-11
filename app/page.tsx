@@ -7,9 +7,7 @@ import BikeForm from "./_components/BikeFitForm";
 import VideoUploader from "./_components/VideoUploader";
 import "@mantine/core/styles.css";
 import StreamingChart from "./_components/XyPlot";
-import TestPlot from "./_components/test_plot";
 import { FitDataElement } from "./_utils/detectPose";
-import VideoFrameProcessor from "./_components/VideoUploaderSeek";
 
 const theme = createTheme({
   // colorScheme: 'dark', // Dark mode base
@@ -84,10 +82,10 @@ export default function HomePage() {
             <VideoUploader
               videoRef={videoRef}
               canvasRef={canvasRef}
+              fitDataHistoryRef={fitDataHistoryRef}
               onFrameAnaylze={runPoseDetection}
               onFrameFromMemory={drawPoseFromHistory}
               onStop={stopPoseDetection}
-              showControlsInside={false}
               onDurationChange={handleDurationChange}
               onTimeUpdate={(timestamp) => {
                 if (cursorUpdateRef.current) {

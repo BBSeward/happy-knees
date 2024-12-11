@@ -113,7 +113,7 @@ const StreamingChart: React.FC<StreamingChartProps> = ({
           tickformat: "%M:%S",
           range: [0, timeWindowRef.current],
         },
-        yaxis: { title: "Hip Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
+        yaxis: { title: "Elbow Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
         xaxis2: {
           title: "",
           color: "#ffffff",
@@ -122,7 +122,7 @@ const StreamingChart: React.FC<StreamingChartProps> = ({
           tickformat: "%M:%S",
           range: [0, timeWindowRef.current],
         },
-        yaxis2: { title: "Knee Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
+        yaxis2: { title: "Hip Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
         xaxis3: {
           title: "",
           color: "#ffffff",
@@ -131,7 +131,7 @@ const StreamingChart: React.FC<StreamingChartProps> = ({
           tickformat: "%M:%S",
           range: [0, timeWindowRef.current],
         },
-        yaxis3: { title: "Ankle Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
+        yaxis3: { title: "knee Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
         xaxis4: {
           title: "",
           color: "#ffffff",
@@ -140,7 +140,7 @@ const StreamingChart: React.FC<StreamingChartProps> = ({
           tickformat: "%M:%S",
           range: [0, timeWindowRef.current],
         },
-        yaxis4: { title: "Elbow Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
+        yaxis4: { title: "Ankel Angle (°)", color: "#ffffff", gridcolor: "#444444", showgrid: true },
       };
 
       const config = { responsive: true };
@@ -162,16 +162,16 @@ const StreamingChart: React.FC<StreamingChartProps> = ({
 
         if (newData.length > 0) {
           const xData = newData.map((data) => data.timestamp);
+          const elbowData = newData.map((data) => data.fitGeometry.elbow_angle);
           const hipData = newData.map((data) => data.fitGeometry.hip_angle);
           const kneeData = newData.map((data) => data.fitGeometry.knee_angle);
           const ankleData = newData.map((data) => data.fitGeometry.ankle_angle);
-          const elbowData = newData.map((data) => data.fitGeometry.elbow_angle);
 
           Plotly.extendTraces(
             chartRef.current,
             {
               x: [xData, xData, xData, xData],
-              y: [hipData, kneeData, ankleData, elbowData],
+              y: [elbowData, hipData, kneeData, ankleData],
             },
             [0, 1, 2, 3]
           );
@@ -214,109 +214,69 @@ const StreamingChart: React.FC<StreamingChartProps> = ({
       setTimeUpdateCallback((timestamp: number) => {
         if (chartRef.current) {
           const plotData = chartRef.current.data;
-          
-          const annotations = plotData.map((trace, traceIndex) => {
-            // Safety check for trace data
-            if (!trace.x || !trace.y) {
-              return null;
-            }
 
-            const xData = trace.x as number[];
-            const yData = trace.y as number[];
-
-            // Check if we have any data points
-            if (xData.length === 0 || yData.length === 0) {
-              return null;
-            }
-
-            // Find index of closest timestamp
-            const closestIndex = xData.reduce((prev, curr, idx) => 
-              Math.abs(curr - timestamp) < Math.abs(xData[prev] - timestamp) ? idx : prev, 0);
-
-            // Safety check for the found values
-            if (closestIndex === undefined || !yData[closestIndex]) {
-              return null;
-            }
-
-            return {
-              x: xData[closestIndex],
-              y: yData[closestIndex],
-              xref: `x${traceIndex + 1}`,
-              yref: `y${traceIndex + 1}`,
-              text: yData[closestIndex].toFixed(1) + '°',
-              showarrow: true,
-              arrowhead: 1,
-              ax: 50,
-              ay: 0,
-              yanchor: 'center',
-              font: { color: 'white' },
-              bgcolor: 'rgba(0, 0, 0, 0.5)',
-              bordercolor: 'gray',
-              standoff: 5  // Minimum distance between the arrow and the text
-            };
-          })
-          .filter((annotation): annotation is NonNullable<typeof annotation> => annotation !== null);
-
-          Plotly.relayout(chartRef.current, {
-            shapes: [
-              {
-                type: 'line',
-                x0: timestamp,
-                x1: timestamp,
-                y0: 0,
-                y1: 1,
-                yref: 'paper',
-                xref: 'x',
-                line: {
-                  color: 'gray',
-                  width: 1,
-                  dash: 'dash'
-                }
-              },
-              {
-                type: 'line',
-                x0: timestamp,
-                x1: timestamp,
-                y0: 0,
-                y1: 1,
-                yref: 'paper',
-                xref: 'x2',
-                line: {
-                  color: 'gray',
-                  width: 1,
-                  dash: 'dash'
-                }
-              },
-              {
-                type: 'line',
-                x0: timestamp,
-                x1: timestamp,
-                y0: 0,
-                y1: 1,
-                yref: 'paper',
-                xref: 'x3',
-                line: {
-                  color: 'gray',
-                  width: 1,
-                  dash: 'dash'
-                }
-              },
-              {
-                type: 'line',
-                x0: timestamp,
-                x1: timestamp,
-                y0: 0,
-                y1: 1,
-                yref: 'paper',
-                xref: 'x4',
-                line: {
-                  color: 'gray',
-                  width: 1,
-                  dash: 'dash'
-                }
+          const annotations = plotData
+            .map((trace, traceIndex) => {
+              // Safety check for trace data
+              if (!trace.x || !trace.y) {
+                return null;
               }
-            ],
-            annotations: annotations
+
+              const xData = trace.x as number[];
+              const yData = trace.y as number[];
+
+              // Check if we have any data points
+              if (xData.length === 0 || yData.length === 0) {
+                return null;
+              }
+
+              // Find index of closest timestamp
+              const closestIndex = xData.reduce(
+                (prev, curr, idx) => (Math.abs(curr - timestamp) < Math.abs(xData[prev] - timestamp) ? idx : prev),
+                0
+              );
+
+              // Safety check for the found values
+              if (closestIndex === undefined || !yData[closestIndex]) {
+                return null;
+              }
+
+              return {
+                x: xData[closestIndex],
+                y: yData[closestIndex],
+                xref: `x${traceIndex + 1}`,
+                yref: `y${traceIndex + 1}`,
+                text: yData[closestIndex].toFixed(1) + "°",
+                showarrow: true,
+                arrowhead: 1,
+                ax: 50,
+                ay: 0,
+                yanchor: "center",
+                font: { color: "white" },
+                bgcolor: "rgba(0, 0, 0, 0.5)",
+                bordercolor: "gray",
+                standoff: 5, // Minimum distance between the arrow and the text
+              };
+            })
+            .filter((annotation): annotation is NonNullable<typeof annotation> => annotation !== null);
+
+          // draw vertical lines at the timestamp
+          Plotly.relayout(chartRef.current, {
+            shapes: Array.from({ length: 4 }, (_, i) => ({
+              type: "line",
+              x0: timestamp,
+              x1: timestamp,
+              y0: 0,
+              y1: 1,
+              yref: "paper",
+              xref: `x${i + 1}`,
+              line: {
+                color: "gray",
+                width: 1,
+                dash: "dash",
+              },
+            })),
+            annotations: annotations,
           });
         }
       });

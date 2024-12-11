@@ -108,8 +108,7 @@ interface FitMeasurements {
   ankle_angle: number;
   elbow_angle: number;
 
-  hip_to_crank_distance: number;
-  hip_to_wrist_distance: number;
+  crank_angle: number;
 }
 
 export interface FitDataElement {

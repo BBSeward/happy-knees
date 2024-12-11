@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import { processFitData } from "../_utils/FitDataPostprocessor";
+import { FitDataElement } from "../_utils/detectPose";
 
 interface VideoUploaderProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   canvasRef: React.RefObject<HTMLCanvasElement>;
+  fitDataHistoryRef: React.RefObject<FitDataElement[]>;
   onFrameAnaylze: () => void;
   onFrameFromMemory: () => void;
   onStop: () => void;
-  showControlsInside?: boolean;
   onDurationChange?: (duration: number) => void;
   onTimeUpdate?: (timestamp: number) => void;
 }
@@ -14,6 +16,7 @@ interface VideoUploaderProps {
 export default function VideoUploader({
   videoRef,
   canvasRef,
+  fitDataHistoryRef,
   onFrameAnaylze,
   onFrameFromMemory,
   onStop,
@@ -39,17 +42,17 @@ export default function VideoUploader({
     };
   }, [onStop]);
 
-  // // Add this useEffect for auto-loading
-  // useEffect(() => {
-  //   // Create a File object from your local video
-  //   fetch("/reddit-video.mp4") // Place your video in the public folder
-  //     .then((response) => response.blob())
-  //     .then((blob) => {
-  //       const file = new File([blob], "sample-video.mp4", { type: "video/mp4" });
-  //       handleFile(file);
-  //     })
-  //     .catch((error) => console.error("Error auto-loading video:", error));
-  // }, []); // Empty dependency array means this runs once on mount
+  // Add this useEffect for auto-loading
+  useEffect(() => {
+    // Create a File object from your local video
+    fetch("/reddit-video.mp4") // Place your video in the public folder
+      .then((response) => response.blob())
+      .then((blob) => {
+        const file = new File([blob], "sample-video.mp4", { type: "video/mp4" });
+        handleFile(file);
+      })
+      .catch((error) => console.error("Error auto-loading video:", error));
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("video/")) {
@@ -279,6 +282,17 @@ export default function VideoUploader({
     </div>
   );
 
+  const handleProcessingComplete = () => {
+    if (fitDataHistoryRef.current) {
+      // Process the data and create a new array
+      const processedData = processFitData(fitDataHistoryRef.current);
+      // Replace the contents of the array instead of reassigning current
+      fitDataHistoryRef.current.length = 0;
+      fitDataHistoryRef.current.push(...processedData);
+      console.log("Boom, we processed the data");
+    }
+  };
+
   return (
     <>
       <div style={{ width: "100%" }}>
@@ -347,6 +361,7 @@ export default function VideoUploader({
                   }
                   setInitialProcessingDone(true);
                   console.log("Video reached the end!");
+                  handleProcessingComplete();
                 }}
                 style={{
                   position: "absolute",
@@ -369,24 +384,25 @@ export default function VideoUploader({
           )}
         </div>
       </div>
-      {videoSrc && (initialProcessingDone ? (
-        renderControls()
-      ) : (
-        <div
-          style={{
-            paddingRight: "5px",
-            paddingLeft: "5px",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            backgroundColor: "rgba(0, 0, 0, 0.8)",
-            borderRadius: "0 0 8px 8px",
-            justifyContent: "center",
-          }}
-        >
-          <p>Processing video, keep browser window open!</p>
-        </div>
-      ))}
+      {videoSrc &&
+        (initialProcessingDone ? (
+          renderControls()
+        ) : (
+          <div
+            style={{
+              paddingRight: "5px",
+              paddingLeft: "5px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              borderRadius: "0 0 8px 8px",
+              justifyContent: "center",
+            }}
+          >
+            <p>Processing video, keep browser window open!</p>
+          </div>
+        ))}
 
       {/* {initialProcessingDone ? (
         videoSrc && !showControlsInside && renderControls()
