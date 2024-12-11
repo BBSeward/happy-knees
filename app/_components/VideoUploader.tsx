@@ -99,19 +99,18 @@ export default function VideoUploader({
         onFrameFromMemory();
       }
     } else {
-      if (onFrameAnaylze) { 
+      if (onFrameAnaylze) {
         onFrameAnaylze();
       }
     }
-    handleOnTimeUpdate()
-
+    handleOnTimeUpdate();
   };
 
   const handleOnTimeUpdate = () => {
     if (onTimeUpdate) {
       onTimeUpdate(videoRef.current?.currentTime || 0);
     }
-  };  
+  };
 
   const handlePlaybackFrame = () => {
     if (videoRef.current && !videoRef.current.paused) {
@@ -372,7 +371,24 @@ export default function VideoUploader({
           {videoSrc && showControlsInside && initialProcessingDone && renderControls()}
         </div>
       </div>
-      {videoSrc && !showControlsInside && initialProcessingDone && renderControls()}
+      {initialProcessingDone ? (
+        videoSrc && !showControlsInside && renderControls()
+      ) : (
+        <div
+          style={{
+            paddingRight: "5px",
+            paddingLeft: "5px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            borderRadius: "0 0 8px 8px",
+            justifyContent: "center",
+          }}
+        >
+          <p>Processing video, keep browser window open!</p>
+        </div>
+      )}
     </>
   );
 }
