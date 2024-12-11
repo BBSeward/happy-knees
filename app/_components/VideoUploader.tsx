@@ -186,6 +186,28 @@ export default function VideoUploader({
     }
   };
 
+  // Update frame step function to handle playing state
+  const stepFrame = (forward: boolean) => {
+    if (!videoRef.current) return;
+    
+    // If video is playing, pause it first
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    }
+    
+    // Each frame is 1/24th of a second (assuming 24fps)
+    const frameTime = 1/24;
+    const newTime = videoRef.current.currentTime + (forward ? frameTime : -frameTime);
+    
+    // Ensure we stay within video bounds
+    videoRef.current.currentTime = Math.max(0, Math.min(newTime, duration));
+    processFrame();
+  };
+
   const renderControls = () => (
     <div style={{ 
       paddingRight: '5px',
@@ -197,6 +219,18 @@ export default function VideoUploader({
       borderRadius: showControlsInside ? '0' : '0 0 8px 8px',
     }}>
       <button 
+        onClick={() => stepFrame(false)}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: 'white',
+          cursor: 'pointer',
+          padding: '5px',
+        }}
+      >
+        ⏮️
+      </button>
+      <button 
         onClick={togglePlay}
         style={{
           background: 'none',
@@ -207,6 +241,18 @@ export default function VideoUploader({
         }}
       >
         {isPlaying ? '⏸️' : '▶️'}
+      </button>
+      <button 
+        onClick={() => stepFrame(true)}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: 'white',
+          cursor: 'pointer',
+          padding: '5px',
+        }}
+      >
+        ⏭️
       </button>
       <input
         type="range"

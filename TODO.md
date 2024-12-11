@@ -1,6 +1,13 @@
 
 # TODO!!
 MVP!!!!!::::::
+
+USE requestVideoFrameCallback and web workers!!!! query: Ok i want to go with the requestFrameCallbacklogic. What if this calls code that take a long time? 
+
+
+
+
+------------------
 lets people uplod their video, we show all the numbers, and let them export a video with the angles
 
 ## Short Term

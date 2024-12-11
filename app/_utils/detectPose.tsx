@@ -231,13 +231,12 @@ export const useDetectPose = (
       const drawingUtils = new DrawingUtils(canvasCtx!);
       let lastVideoTime = -1;
 
-      let startTimeMs = performance.now();
 
       if (lastVideoTime !== video.currentTime) {
         lastVideoTime = video.currentTime;
 
         // Then detect pose and draw measurements in the same frame
-        poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
+        poseLandmarker.detectForVideo(video, video.currentTime*1000, (result) => {
           parsedLandmarksRef.current = processLandmarkElements(result);
 
           // if we have good results
